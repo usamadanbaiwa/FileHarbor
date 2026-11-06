@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="390" viewBox="0 0 1200 390" role="img" aria-labelledby="title description">
+  <title id="title">How FileHarbor handles files</title>
+  <desc id="description">Your backend uploads over HTTPS to FileHarbor. FileHarbor checks permissions and stores files under an account directory. A configured web server serves public files to the browser. Your application stores file metadata.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#70d9bf"/></marker>
+  </defs>
+  <rect width="1200" height="390" rx="16" fill="#0e1d2c"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="32" y="43" font-size="16" fill="#a2f0d8" font-weight="700" letter-spacing="1">UPLOAD THROUGH THE API. SERVE THROUGH YOUR WEB SERVER.</text>
+    <g fill="#162d3d" stroke="#365566">
+      <rect x="32" y="83" width="310" height="125" rx="12"/>
+      <rect x="445" y="83" width="310" height="125" rx="12"/>
+      <rect x="858" y="83" width="310" height="125" rx="12"/>
+    </g>
+    <g fill="#ffffff" font-size="23" font-weight="650">
+      <text x="56" y="120">Your backend</text>
+      <text x="469" y="120">FileHarbor API</text>
+      <text x="882" y="120">Your storage</text>
+    </g>
+    <g fill="#b8ceda" font-size="16">
+      <text x="56" y="154">Choose a folder and filename.</text>
+      <text x="56" y="181">Keep metadata in your database.</text>
+      <text x="469" y="154">Check key, permissions, and file.</text>
+      <text x="469" y="181">Return a relative file path.</text>
+      <text x="882" y="154">storage/ACCOUNT_ID/assets/</text>
+      <text x="882" y="181">photo.png</text>
+    </g>
+    <g stroke="#70d9bf" stroke-width="2" fill="none" marker-end="url(#arrow)">
+      <path d="M351 146H433"/>
+      <path d="M764 146H846"/>
+      <path d="M1013 216V264"/>
+      <path d="M846 304H354"/>
+    </g>
+    <text x="392" y="134" text-anchor="middle" fill="#a2f0d8" font-size="12">HTTPS</text>
+    <text x="804" y="134" text-anchor="middle" fill="#a2f0d8" font-size="12">WRITE</text>
+    <rect x="858" y="274" width="310" height="72" rx="12" fill="#162d3d" stroke="#365566"/>
+    <text x="882" y="305" fill="#ffffff" font-size="21" font-weight="650">Apache / Nginx</text>
+    <text x="882" y="329" fill="#b8ceda" font-size="14">Configured static-file route</text>
+    <rect x="32" y="274" width="310" height="72" rx="12" fill="#162d3d" stroke="#365566"/>
+    <text x="56" y="305" fill="#ffffff" font-size="21" font-weight="650">Browser / mobile app</text>
+    <text x="56" y="329" fill="#b8ceda" font-size="14">Views the public image or video</text>
+    <text x="600" y="291" text-anchor="middle" fill="#a2f0d8" font-size="14">GET /content/ACCOUNT_ID/assets/photo.png</text>
+    <text x="600" y="365" text-anchor="middle" fill="#8aa9b9" font-size="14">Public files are served directly. API keys protect management operations.</text>
+  </g>
+</svg>

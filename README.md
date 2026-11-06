@@ -1,12 +1,26 @@
-# FileHarbor
+![FileHarbor — Your server. Your files. Your API.](docs/assets/fileharbor-banner.svg)
 
-### Your server. Your files. Your API.
+<p align="center">
+  <a href="https://github.com/usamadanbaiwa/FileHarbor/actions/workflows/tests.yml"><img src="https://github.com/usamadanbaiwa/FileHarbor/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="php/README.md"><img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=flat-square&amp;logo=php&amp;logoColor=white" alt="PHP 8.3 or newer"></a>
+  <a href="node/README.md"><img src="https://img.shields.io/badge/Node.js-22.13%2B-43853D?style=flat-square&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js 22.13 or newer"></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributions-welcome-167D68?style=flat-square" alt="Contributions welcome"></a>
+</p>
 
-**A self-hosted file management API for application assets, images, documents, and videos.**
+<p align="center">
+  <strong>A self-hosted file management API for images, documents, and videos.</strong><br>
+  Use your VPS or compatible shared hosting. Upload from any backend. Serve files with your web server.
+</p>
 
-Keep your application focused on its own work. Run FileHarbor on a separate hosting account or server, upload files over HTTP, and let your web server deliver them.
+<p align="center">
+  <a href="php/README.md"><strong>Install PHP</strong></a> ·
+  <a href="node/README.md"><strong>Install Node.js</strong></a> ·
+  <a href="#upload-your-first-file">Upload example</a> ·
+  <a href="https://github.com/usamadanbaiwa/FileHarbor/releases">Releases</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
 
-FileHarbor is for developers who want to use storage they control: a VPS, dedicated server, or compatible shared-hosting plan. It does not require a managed object-storage account, an S3-compatible service, Docker, or an external database server.
+---
 
 ## Why FileHarbor?
 
@@ -16,18 +30,17 @@ Managed storage services such as S3 and R2 offer useful capabilities. FileHarbor
 
 ## What you get
 
-- Upload files using any HTTP client.
-- Create folders, list files with pagination, and delete exact relative paths.
-- Delete an entire folder with `{"source":"assets","recursive":true}` in the Node.js API. The default is `false`; see [directory deletion](node/docs/api.md#delete-a-directory).
-- Manage API accounts, permissions, and key rotation through a simple administrator panel.
-- Keep applications isolated in separate account directories.
-- Upload JPEG, PNG, WebP, PDF, and **MP4 video**.
-- Enforce a **25 MiB default maximum file size**, with a configurable allowlist and limit.
-- Keep files as ordinary filesystem files.
-- Serve public assets directly through Apache, Nginx, or your hosting web server.
-- Keep file metadata in your application's database.
+| | |
+| --- | --- |
+| **Upload from any backend** | Multipart HTTP uploads with Bearer API keys. No SDK required. |
+| **A small admin panel** | Create accounts, assign permissions, and rotate or revoke keys. |
+| **Separate application accounts** | Each account has its own storage directory and scoped access. |
+| **Images, documents, and video** | JPEG, PNG, WebP, PDF, and MP4. Configurable **25 MiB** default limit. |
+| **Ordinary files** | Create folders, list with pagination, and delete by relative path. |
+| **Your own metadata** | Your application stores file records. SQLite holds authentication state. |
+| **Direct public delivery** | Apache, Nginx, or your hosting web server serves the files. |
 
-SQLite stores authentication and essential configuration, not a record for every uploaded file.
+No Docker, external database server, or object-storage account required.
 
 ## Choose your installation
 
@@ -78,14 +91,13 @@ Open `http://127.0.0.1:7241/panel/`, create the administrator, and generate an A
 
 ## How a request works
 
-```text
-Your application's backend
-    → sends a Bearer API key and file over HTTPS
-    → FileHarbor checks the account, permission, path, size, and content type
-    → FileHarbor stores the file in the account's directory
-    → your application saves the returned relative path
-    → your web server delivers the public file
-```
+![Request flow: backend to FileHarbor to storage, then web server to browser](docs/assets/request-flow.svg)
+
+Your backend uploads a file. FileHarbor checks the account, permission, path, size, and content type, then returns its relative path. Your application saves that path; a configured static route makes the file publicly accessible.
+
+## Upload your first file
+
+Create an account in the panel with `directories:create` and `files:upload` permissions. Replace `ACCOUNT_ID`, `API_KEY`, and the example domain below.
 
 For example, first create an `assets` directory:
 
@@ -126,9 +138,9 @@ Store the returned source and account ID in your application. Configure the publ
 https://files.example.com/content/ACCOUNT_ID/assets/profile.png
 ```
 
-Changing servers can then preserve the relative paths while your application changes its configured base URL. An automated migration endpoint is not part of the API.
+When moving servers, copy your files with the same directory structure and change the public base URL in your application.
 
-## Integrate with the HTTP library you already use
+## Use your usual HTTP client
 
 There is no required FileHarbor SDK or framework. Use multipart uploads and the Bearer header:
 
@@ -146,6 +158,12 @@ See [client integration examples](docs/clients.md), or the `examples/` folder in
 Only the application's `public/` directory belongs in its web root. Keep credentials, SQLite, temporary uploads, and source code private. Configure static storage separately, disable uploaded-script execution, use HTTPS, and back up both files and authentication state.
 
 File type inspection is not malware scanning or video transcoding. Public files are public: rotating a key does not revoke an existing static URL.
+
+## API reference
+
+See the [PHP API reference](php/docs/api.md) or [Node.js API reference](node/docs/api.md) for all endpoints, permissions, and errors.
+
+Directory deletion is empty-only by default. The Node.js API also supports `{"source":"assets","recursive":true}` to remove a folder and its contents.
 
 ## Contributing
 

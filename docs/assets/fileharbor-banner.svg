@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title description">
+  <title id="title">FileHarbor — Your server. Your files. Your API.</title>
+  <desc id="description">A self-hosted file management API for images, documents, and videos. Upload over HTTP and store ordinary files on your own hosting.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#0b1828"/>
+      <stop offset="1" stop-color="#163a49"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#8ccece" stroke-opacity=".07"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="420" rx="20" fill="url(#background)"/>
+  <rect width="1280" height="420" rx="20" fill="url(#grid)"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <rect x="56" y="48" width="164" height="30" rx="15" fill="#163e48" stroke="#38716f"/>
+    <text x="138" y="68" text-anchor="middle" fill="#9be7d6" font-size="12" font-weight="700" letter-spacing="2">SELF-HOSTED</text>
+    <text x="56" y="159" fill="#ffffff" font-size="68" font-weight="750" letter-spacing="-2">FileHarbor</text>
+    <text x="59" y="207" fill="#a2f0d8" font-size="27" font-weight="600">Your server. Your files. Your API.</text>
+    <text x="59" y="259" fill="#c3d2dd" font-size="20">Images, documents, and videos.</text>
+    <text x="59" y="291" fill="#c3d2dd" font-size="20">Upload over HTTP. Keep your own storage.</text>
+    <text x="59" y="365" fill="#89a9b7" font-size="15" letter-spacing="1">PHP OR NODE.JS   /   LOCAL FILES   /   ANY HTTP CLIENT</text>
+    <rect x="812" y="74" width="406" height="268" rx="14" fill="#0b1b2b" stroke="#365566"/>
+    <path d="M812 118H1218" stroke="#365566"/>
+    <circle cx="836" cy="96" r="4" fill="#6ce0bb"/>
+    <text x="852" y="101" fill="#b4cad6" font-size="13">YOUR STORAGE</text>
+    <g font-family="Consolas, monospace" font-size="18">
+      <text x="840" y="159" fill="#a2f0d8">storage/</text>
+      <path d="M850 178V298M850 198H878M850 244H878M850 290H878" fill="none" stroke="#456475" stroke-width="2"/>
+      <text x="890" y="204" fill="#e2edf4">blog/cover.webp</text>
+      <text x="890" y="250" fill="#e2edf4">users/avatar.png</text>
+      <text x="890" y="296" fill="#e2edf4">videos/intro.mp4</text>
+    </g>
+    <text x="1015" y="377" text-anchor="middle" fill="#a1bdc8" font-size="15">Ordinary files. On hosting you control.</text>
+  </g>
+</svg>
