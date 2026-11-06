@@ -12,7 +12,6 @@ function authenticateAccount(registry) {
 
         if (match) {
             account = registry.authorize(request.params.accountId, match[1]);
-
         }
 
         if (!account) {
@@ -29,7 +28,6 @@ function authenticateAccount(registry) {
 
 function requirePermission(permission) {
     return function checkPermission(request, response, next) {
-
         if (!request.account.permissions.includes(permission)) {
             next(new ApiError(403, 'FORBIDDEN', 'Permission denied.'));
             return;

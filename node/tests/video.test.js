@@ -6,7 +6,6 @@ import { createTestServer, testImage } from './support/fixtures.js';
 const videoHeader = await readFile(new URL('./fixtures/video-header.mp4', import.meta.url));
 
 test('MP4 uploads accept 25 MiB and reject one byte above the default', async function videoLimit(testContext) {
-    
     const server = await createTestServer(testContext);
 
     await server.setup();

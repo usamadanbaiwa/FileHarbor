@@ -177,12 +177,10 @@ export class Storage {
 
         if (directory) {
             if (recursive) {
-                
                 await rm(target, {
                     recursive: true,
                     force: true
                 });
-
             } else {
                 //  refuses non-empty directories.
                 await rmdir(target);

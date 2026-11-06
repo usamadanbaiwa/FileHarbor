@@ -35,7 +35,6 @@ export function validateDataDirectories(storage, state) {
     );
 
     for (const directory of [storage, state]) {
-
         requireValue(
             !directoriesOverlap(directory, publicDirectory) &&
                 !directoriesOverlap(publicDirectory, directory) &&
