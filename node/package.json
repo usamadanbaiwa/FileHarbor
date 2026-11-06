@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node --env-file=.env --watch src/server.js",
     "test": "node --test tests/*.test.js",
-    "lint": "eslint src tests public/panel/script.js tools examples eslint.config.mjs",
+    "lint": "eslint src tests public/panel/script.js tools eslint.config.mjs",
     "format": "prettier --write src/**/*.js public/panel/script.js tests/**/*.js tools/*.mjs eslint.config.mjs",
     "format:check": "prettier --check src/**/*.js public/panel/script.js tests/**/*.js tools/*.mjs eslint.config.mjs",
     "release": "node tools/release.mjs"
