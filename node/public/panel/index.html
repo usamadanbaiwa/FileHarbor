@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FileHarbor panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>FileHarbor</h1>
+    <p>Manage API access. Uploaded files are served by your web server.</p>
+    <p id="status" role="status"></p>
+    <pre id="key" hidden></pre>
+    <section id="setup" hidden>
+      <h2>First-time setup</h2>
+      <p>Use the setup token configured on the server. Setup locks after creating the administrator.</p>
+      <form id="setup-form">
+        <label>Setup token <input name="setup_token" type="password" required autocomplete="off"></label>
+        <label>Username <input name="username" required autocomplete="username"></label>
+        <label>Password (12–256 characters) <input name="password" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label>
+        <button>Create administrator</button>
+      </form>
+    </section>
+    <section id="login" hidden>
+      <h2>Administrator login</h2>
+      <form id="login-form">
+        <label>Username <input name="username" required autocomplete="username"></label>
+        <label>Password <input name="password" type="password" required autocomplete="current-password"></label>
+        <button>Log in</button>
+      </form>
+    </section>
+    <section id="admin" hidden>
+      <button id="logout">Log out</button>
+      <h2>API accounts</h2>
+      <p>Each account has its own directory under the configured storage root. Removing an account retains its files.</p>
+      <div id="accounts"></div>
+      <h2>Create account</h2>
+      <form id="account-form">
+        <label>Name <input name="name" required maxlength="80"></label>
+        <fieldset id="new-permissions"><legend>Permissions</legend></fieldset>
+        <button>Create account and key</button>
+      </form>
+      <h2>Change administrator credentials</h2>
+      <form id="credentials-form">
+        <label>Current password <input name="current_password" type="password" required autocomplete="current-password"></label>
+        <label>New username <input name="username" required autocomplete="username"></label>
+        <label>New password <input name="password" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label>
+        <button>Save and log out all sessions</button>
+      </form>
+    </section>
+  </main>
+  <script src="script.js" defer></script>
+</body>
+</html>

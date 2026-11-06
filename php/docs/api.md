@@ -1,0 +1,67 @@
+# API reference
+
+Authenticate management requests with a Bearer API key. Success responses use `{ "success": true, "data": ... }`. Errors use `{ "success": false, "error": { "code": "...", "message": "..." } }`. Public static serving is configured separately.
+
+
+## File API
+
+Base: `/fileharbor/{account_id}/api`. Every request requires `Authorization: Bearer <API_KEY>`. The key must belong to the account and the account must be enabled. Keep API keys on the application backend.
+
+| Method / path | Scope | Input | Success |
+| --- | --- | --- | --- |
+| POST `/upload` | `files:upload` | multipart `file`, optional `folder`, optional `file_name` | 201: `file_name`, `source`, `mime_type`, `size` |
+| GET `/files` | `files:list` | query `folder`, `page`, `limit` | 200: `items`, `pagination` |
+| DELETE `/files` | `files:delete` | JSON `source` | 200: `deleted: true` |
+| POST `/directories` | `directories:create` | JSON `source` | 201: `created: true` |
+| GET `/directories` | `directories:list` | query `folder`, `page`, `limit` | 200: directory-only `items`, `pagination` |
+| DELETE `/directories` | `directories:delete` | JSON `source` | 200: `deleted: true` |
+
+Paths are relative to the account root. Upload folders must already exist. Directory creation creates missing parents and is idempotent for existing directories. Deletion never removes the account root; directory deletion is empty-only. Upload collisions give 409; there is no overwrite or rename operation.
+
+Recursive deletion (`{"source":"assets","recursive":true}`) is not implemented in this application. Only empty directories can be deleted; do not rely on the `recursive` field here.
+
+Listing defaults: empty folder (root), page 1, limit 50. Limit range 1–100; page range 1–1000000. Entries are sorted by case-sensitive filename code-unit order. Listings are non-recursive and omit symlinks. Each item contains `file_name`, `source`, `type` (`file` or `directory`), and filesystem `size` in bytes. Directory size is not recursive usage. Pagination is `{page, limit, total}`. Pages beyond the end return empty items; mutations can shift page boundaries.
+
+Uploads accept one `file` part. `file_name` overrides the multipart filename; otherwise that filename is used. Fields may arrive after the file. Allowed types default to JPEG (`jpg`, `jpeg`), PNG (`png`), WebP (`webp`), and PDF (`pdf`), and MP4 (`mp4`). Content signatures and extensions must agree. The configured allowlist can narrow these types. Client MIME headers are not trusted. Default maximum size is 25 MiB; multipart requests are capped at file size plus 16 KiB overhead. JSON bodies are capped at 16 KiB.
+
+Path segments start with an ASCII letter/digit and contain only ASCII letters/digits, dot, underscore and hyphen. Maximum segment length: 120; maximum relative path length: 1024. Reserved Windows names, trailing dots, dot segments, absolute paths, empty segments and backslashes are rejected.
+
+## Panel API
+
+Browser endpoints under `/panel-api`, with the same JSON envelopes. The simple panel is at `/panel/`. These endpoints use administrator sessions, not API keys.
+
+| Method / path | Access | Input / result |
+| --- | --- | --- |
+| GET `/status` | Public | 200: `setup_required` |
+| POST `/setup` | One-time setup secret | `setup_token`, `username`, `password`; 201: `created` |
+| POST `/login` | Public; exact Origin required | `username`, `password`; 200: `csrf_token` and session cookie |
+| GET `/session` | Admin | 200: `csrf_token` |
+| POST `/logout` | Admin + CSRF | 200: `logged_out` |
+| GET `/accounts` | Admin | 200: `accounts`, available `permissions` |
+| POST `/accounts` | Admin + CSRF | `name`, `permissions`; 201: `id`, `name`, `permissions`, `enabled`, `api_key`, `public_prefix` |
+| PATCH `/accounts/{id}` | Admin + CSRF | `name`, `permissions`, boolean `enabled`; 200: `updated` |
+| POST `/accounts/{id}/rotate` | Admin + CSRF | 200: one-time `api_key` |
+| DELETE `/accounts/{id}` | Admin + CSRF | 200: `removed`, `files_retained` |
+| POST `/credentials` | Admin + CSRF | `current_password`, new `username`, new `password`; 200: `updated`, `login_required` |
+
+Authenticated mutating requests require `X-CSRF-Token` from login/session and an `Origin` equal to configured `FILEHARBOR_URL`. Cookies use HttpOnly, SameSite=Strict and Secure in production. Sessions expire after one hour; changing credentials invalidates all sessions. Rotating keys immediately invalidates the previous key. Keys are returned only on creation/rotation.
+
+Account IDs are generated and map to isolated public/storage prefixes; administrator-selected custom roots are not implemented. Account names must be nonempty and at most 80 characters. Scopes are explicit; empty scopes grant no file operations. Username: 3–80 ASCII letters/digits or `. _ @ -`; password: 12–256 characters.
+
+## Health and errors
+
+Public `GET /api/health` returns 200 with `{ "status": "ok" }` inside `data`. This is liveness, not a storage integrity check.
+
+| HTTP | Codes |
+| --- | --- |
+| 400 | `INVALID_REQUEST`, `INVALID_PATH`, `INVALID_FILE` |
+| 401 | `UNAUTHORIZED` |
+| 403 | `FORBIDDEN` |
+| 404 | `FILE_NOT_FOUND`, `ACCOUNT_NOT_FOUND`, `NOT_FOUND` |
+| 409 | `FILE_EXISTS`, `CONFLICT`, `SETUP_COMPLETE` |
+| 413 | `FILE_TOO_LARGE` |
+| 415 | `UNSUPPORTED_FILE_TYPE` |
+| 429 | `RATE_LIMIT_EXCEEDED` |
+| 500 | `STORAGE_ERROR` |
+
+Cross-account, disabled and invalid keys give 401. Missing scope gives 403. Missing paths give 404. Non-empty directory deletion gives 409. Error messages must not disclose secrets or absolute paths. Clients should branch on codes, not exact human-readable messages.

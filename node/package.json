@@ -1,0 +1,39 @@
+{
+  "name": "fileharbor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted filesystem management API",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node --env-file=.env --watch src/server.js",
+    "test": "node --test tests/*.test.js",
+    "lint": "eslint src tests public/panel/script.js tools examples eslint.config.mjs",
+    "format": "prettier --write src/**/*.js public/panel/script.js tests/**/*.js tools/*.mjs eslint.config.mjs",
+    "format:check": "prettier --check src/**/*.js public/panel/script.js tests/**/*.js tools/*.mjs eslint.config.mjs",
+    "release": "node tools/release.mjs"
+  },
+  "type": "module",
+  "files": [
+    ".env.example",
+    "src/",
+    "public/",
+    "docs/",
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md"
+  ],
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "express": "^5.3.0",
+    "file-type": "^22.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.14.0",
+    "prettier": "^3.9.10"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
+}

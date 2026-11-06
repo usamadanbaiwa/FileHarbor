@@ -1,0 +1,8 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+RewriteCond %{REQUEST_URI} !^/panel/(style\.css|script\.js|index\.php)$
+RewriteRule ^ index.php [END,QSA]

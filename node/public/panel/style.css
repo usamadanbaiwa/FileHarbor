@@ -1,0 +1,47 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 2rem;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 60rem;
+}
+
+label {
+  display: block;
+  margin: 0.6rem 0;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 0.35rem;
+}
+
+button {
+  margin: 0.4rem 0.5rem 0.4rem 0;
+  cursor: pointer;
+}
+
+fieldset,
+article {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #aaa;
+}
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 1rem;
+  background: #eee;
+}
+
+#status {
+  min-height: 1.5rem;
+}
+
+[hidden] {
+  display: none !important;
+}

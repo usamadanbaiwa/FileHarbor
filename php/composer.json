@@ -1,0 +1,32 @@
+{
+  "name": "fileharbor/fileharbor",
+  "description": "Self-hosted filesystem management API",
+  "type": "project",
+  "config": {
+    "vendor-dir": "vendor"
+  },
+  "scripts": {
+    "test": "@php tests/run.php",
+    "lint": "@php tools/lint.php"
+  },
+  "require": {
+    "php": ">=8.3",
+    "ext-pdo": "*",
+    "ext-pdo_sqlite": "*",
+    "ext-fileinfo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "FileHarbor\\": "src/"
+    }
+  },
+  "archive": {
+    "exclude": [
+      "/var",
+      "/storage",
+      "/vendor",
+      "/config/config.php",
+      "/.env"
+    ]
+  }
+}

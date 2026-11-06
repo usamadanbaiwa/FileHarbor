@@ -1,0 +1,60 @@
+name: Build release archives
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example 0.1.0
+        required: true
+        default: 0.1.0
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: php
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, fileinfo, curl, zip
+          coverage: none
+      - run: php tools/lint.php
+      - run: php tests/run.php
+      - run: php tools/release.php "$RELEASE_VERSION"
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fileharbor-php-${{ inputs.version }}
+          path: php/dist/*.zip
+
+  node:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: node
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: node/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm version "$RELEASE_VERSION" --no-git-tag-version --allow-same-version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+      - run: npm run release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fileharbor-node-${{ inputs.version }}
+          path: node/dist/*.tar.gz
