@@ -1,60 +1,127 @@
-name: Build release archives
+name: Release archives
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example 0.1.0
+        description: Build archives without publishing, for example 1.0.0
         required: true
-        default: 0.1.0
 
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.version.outputs.number }}
+    steps:
+      - name: Read release version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TAG_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            version="${TAG_NAME#v}"
+          else
+            version="$INPUT_VERSION"
+          fi
+
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Use a version such as 1.0.0, with a tag such as v1.0.0."
+            exit 1
+          fi
+
+          echo "number=$version" >> "$GITHUB_OUTPUT"
+
   php:
+    needs: version
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: php
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: "8.5"
           extensions: pdo_sqlite, fileinfo, curl, zip
           coverage: none
       - run: php tools/lint.php
       - run: php tests/run.php
-      - run: php tools/release.php "$RELEASE_VERSION"
+      - name: Build PHP ZIP
+        run: php tools/release.php "$RELEASE_VERSION"
         env:
-          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_VERSION: ${{ needs.version.outputs.number }}
       - uses: actions/upload-artifact@v4
         with:
-          name: fileharbor-php-${{ inputs.version }}
-          path: php/dist/*.zip
+          name: php-release
+          path: php/dist/fileharbor-php-${{ needs.version.outputs.number }}.zip
+          if-no-files-found: error
 
   node:
+    needs: version
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: node
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
           cache: npm
           cache-dependency-path: node/package-lock.json
       - run: npm ci
       - run: npm test
       - run: npm run lint
       - run: npm run format:check
-      - run: npm version "$RELEASE_VERSION" --no-git-tag-version --allow-same-version
+      - name: Set archive version
+        run: npm version "$RELEASE_VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
         env:
-          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_VERSION: ${{ needs.version.outputs.number }}
       - run: npm run release
       - uses: actions/upload-artifact@v4
         with:
-          name: fileharbor-node-${{ inputs.version }}
-          path: node/dist/*.tar.gz
+          name: node-release
+          path: node/dist/fileharbor-node-${{ needs.version.outputs.number }}.tar.gz
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'push'
+    needs: [version, php, node]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-release"
+          merge-multiple: true
+          path: archives
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ needs.version.outputs.number }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            "archives/fileharbor-php-$RELEASE_VERSION.zip" \
+            "archives/fileharbor-node-$RELEASE_VERSION.tar.gz" \
+            --verify-tag \
+            --title "FileHarbor $RELEASE_VERSION" \
+            --generate-notes

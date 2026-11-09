@@ -19,7 +19,6 @@ const entries = [
     'src',
     'public',
     'docs',
-    'examples',
     'tests',
     'tools',
     'README.md',
@@ -56,6 +55,24 @@ for (const entry of entries) {
     await checkEntry(entry);
 }
 
+let licenseDirectory = root;
+
+try {
+    await lstat(path.join(licenseDirectory, 'LICENSE'));
+} catch (error) {
+    if (error.code !== 'ENOENT') {
+        throw error;
+    }
+
+    licenseDirectory = path.dirname(root);
+}
+
+const license = await lstat(path.join(licenseDirectory, 'LICENSE'));
+
+if (!license.isFile() || license.isSymbolicLink()) {
+    throw new Error('The release requires a regular LICENSE file.');
+}
+
 const directory = path.join(root, 'dist');
 
 await mkdir(directory, {
@@ -64,7 +81,19 @@ await mkdir(directory, {
 
 const archive = path.join(directory, 'fileharbor-node-' + version + '.tar.gz');
 
-const child = spawn('tar', ['-czf', archive, '--exclude=tests/.state', '-C', root, ...entries], {
+const argumentsList = [
+    '-czf',
+    archive,
+    '--exclude=tests/.state',
+    '-C',
+    root,
+    ...entries,
+    '-C',
+    licenseDirectory,
+    'LICENSE'
+];
+
+const child = spawn('tar', argumentsList, {
     stdio: 'inherit',
     windowsHide: true
 });

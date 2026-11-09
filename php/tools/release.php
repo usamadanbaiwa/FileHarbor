@@ -68,6 +68,20 @@ function addReleaseEntry(ZipArchive $archive, string $root, string $relative): v
 }
 
 try {
+    $license = $root . '/LICENSE';
+
+    if (!file_exists($license)) {
+        $license = dirname($root) . '/LICENSE';
+    }
+
+    if (!is_file($license) || is_link($license)) {
+        throw new RuntimeException('The release requires a regular LICENSE file.');
+    }
+
+    if (!$archive->addFile($license, 'LICENSE')) {
+        throw new RuntimeException('Cannot add the release license.');
+    }
+
     foreach ($entries as $entry) {
         addReleaseEntry($archive, $root, $entry);
     }
