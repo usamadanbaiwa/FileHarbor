@@ -64,4 +64,4 @@ Write instructions that a developer can follow after extracting one application 
 
 ## Releases
 
-Maintainers review and merge pull requests, tag the version, and create a GitHub Release for the relevant application. Contributors do not need to prepare release packages.
+Maintainers review and merge pull requests, then push a version tag. GitHub Actions tests both applications and publishes one release with separate downloads. See [the release guide](docs/releases.md). Contributors do not need to prepare release packages.
