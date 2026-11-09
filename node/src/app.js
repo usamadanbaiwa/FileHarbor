@@ -9,6 +9,7 @@ import { createSessions } from './security/sessions.js';
 import { createRateLimiter } from './security/rate-limit.js';
 import { createPanelRouter } from './routes/panel.js';
 import { createFileRouter } from './routes/files.js';
+import { createContentHandler } from './routes/content.js';
 import { prepareRoot, validateDataDirectories } from './utils/paths.js';
 
 async function prepareDirectories(config) {
@@ -89,6 +90,10 @@ export async function createApp(config) {
 
     app.use('/panel-api', panelRouter);
     app.use('/fileharbor/:accountId/api', fileRouter);
+
+    if (config.serveFiles) {
+        app.use(createContentHandler(storage));
+    }
 
     app.use(function handleMissingRoute(request, response, next) {
         next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found.'));

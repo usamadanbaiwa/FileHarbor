@@ -12,12 +12,6 @@ server {
 
     client_max_body_size 26m;
 
-    location ^~ /content/ {
-        alias /srv/fileharbor/storage/;
-        autoindex off;
-        add_header X-Content-Type-Options nosniff always;
-    }
-
     location / {
         proxy_pass http://127.0.0.1:7241;
         proxy_set_header Host $host;
@@ -27,6 +21,18 @@ server {
 }
 ```
 
-The `/content/` route serves storage as static files and must never execute uploaded content. Do not expose source, configured secrets, SQLite, or staging directories. Ensure MIME mappings cover supported media and disable indexing.
-
 The 26 MiB request allowance leaves room around the application's 25 MiB file limit. Verify the actual host configuration and use a service manager to keep the listener running. Sessions and application limits are per process; configure proxy-wide abuse limits where appropriate.
+
+## Optional direct file serving
+
+Built-in serving works with the configuration above. To let Nginx serve storage directly, set `SERVE_FILES=false` and add this location inside the server block:
+
+```nginx
+    location ^~ /content/ {
+        alias /srv/fileharbor/storage/;
+        autoindex off;
+        add_header X-Content-Type-Options nosniff always;
+    }
+```
+
+Public URLs then use `/content/ACCOUNT_ID/assets/photo.png`. Only map the storage directory. Keep directory indexing and script execution disabled, configure correct MIME types, and keep private state and source outside the mapping.

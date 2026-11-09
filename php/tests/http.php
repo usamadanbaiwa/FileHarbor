@@ -5,6 +5,96 @@ declare(strict_types=1);
 require_once __DIR__ . '/HttpServer.php';
 
 return [
+    'HTTP public files support GET HEAD caching and video ranges' => function (): void {
+        withHttpServer(function (HttpTestServer $server): void {
+            $server->setup();
+            $server->login();
+            $account = $server->account();
+            $image = __DIR__ . '/fixtures/image.png';
+
+            $server->request($account['route'] . '/directories', [
+                'method' => 'POST',
+                'headers' => $account['headers'],
+                'data' => ['source' => 'assets'],
+            ]);
+
+            expectSame(201, $server->upload($account, 'image.png', $image, ['folder' => 'assets'])['status']);
+
+            $url = '/' . $account['id'] . '/assets/image.png';
+            $response = $server->request($url, ['raw' => true]);
+
+            expectSame(200, $response['status']);
+            expectSame(file_get_contents($image), $response['body']);
+            expectSame('image/png', $response['headers']['content-type']);
+            expectSame('nosniff', $response['headers']['x-content-type-options']);
+
+            $head = $server->request($url, ['method' => 'HEAD', 'raw' => true]);
+
+            expectSame(200, $head['status']);
+            expectSame('', $head['body']);
+            expectSame((string) filesize($image), $head['headers']['content-length']);
+
+            $cached = $server->request($url, [
+                'raw' => true,
+                'headers' => ['If-None-Match' => $response['headers']['etag']],
+            ]);
+
+            expectSame(304, $cached['status']);
+            expectSame('', $cached['body']);
+
+            $video = __DIR__ . '/fixtures/video-header.mp4';
+            expectSame(201, $server->upload($account, 'clip.mp4', $video)['status']);
+            $url = '/' . $account['id'] . '/clip.mp4';
+            $bytes = file_get_contents($video);
+            $range = $server->request($url, ['raw' => true, 'headers' => ['Range' => 'bytes=4-11']]);
+
+            expectSame(206, $range['status']);
+            expectSame('video/mp4', $range['headers']['content-type']);
+            expectSame('bytes 4-11/' . strlen($bytes), $range['headers']['content-range']);
+            expectSame(substr($bytes, 4, 8), $range['body']);
+
+            $suffix = $server->request($url, ['raw' => true, 'headers' => ['Range' => 'bytes=-4']]);
+
+            expectSame(206, $suffix['status']);
+            expectSame(substr($bytes, -4), $suffix['body']);
+
+            $invalid = $server->request($url, ['raw' => true, 'headers' => ['Range' => 'bytes=99999-']]);
+
+            expectSame(416, $invalid['status']);
+            expectSame('bytes */' . strlen($bytes), $invalid['headers']['content-range']);
+        });
+    },
+
+    'HTTP public serving rejects unsafe paths directories and active content' => function (): void {
+        withHttpServer(function (HttpTestServer $server): void {
+            $id = str_repeat('a', 22);
+            $root = $server->config->storage . '/' . $id;
+
+            mkdir($root);
+            file_put_contents($root . '/unsafe.png', '<html><script>alert(1)</script></html>');
+            mkdir($root . '/empty');
+
+            foreach (['unsafe.png', 'missing.png', 'empty', '%2e%2e%2fprivate.png', '%5cprivate.png'] as $source) {
+                $response = $server->request('/' . $id . '/' . $source, ['raw' => true]);
+
+                expectSame(true, in_array($response['status'], [400, 404], true));
+            }
+
+            expectSame(404, $server->request('/storage/' . $id . '/unsafe.png', ['raw' => true])['status']);
+        });
+    },
+
+    'HTTP public serving can be disabled' => function (): void {
+        withHttpServer(function (HttpTestServer $server): void {
+            $id = str_repeat('a', 22);
+
+            mkdir($server->config->storage . '/' . $id);
+            copy(__DIR__ . '/fixtures/image.png', $server->config->storage . '/' . $id . '/image.png');
+
+            expectSame(404, $server->request('/' . $id . '/image.png')['status']);
+        }, ['SERVE_FILES' => 'false']);
+    },
+
     'HTTP panel and its assets are available' => function (): void {
         withHttpServer(function (HttpTestServer $server): void {
             $page = $server->request('/panel/', ['raw' => true]);

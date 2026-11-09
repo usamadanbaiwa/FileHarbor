@@ -6,6 +6,20 @@ use FileHarbor\Config\Config;
 use FileHarbor\Http\Request;
 
 return [
+    'public file serving defaults on and requires an explicit boolean setting' => function (): void {
+        $settings = [
+            'FILEHARBOR_ENV' => 'development',
+            'FILEHARBOR_SETUP_TOKEN' => str_repeat('a', 32),
+        ];
+
+        expectSame(true, Config::load($settings)->serveFiles);
+        expectSame(false, Config::load(array_merge($settings, ['SERVE_FILES' => 'false']))->serveFiles);
+
+        expectError('CONFIG_ERROR', function () use ($settings): void {
+            Config::load(array_merge($settings, ['SERVE_FILES' => 'no']));
+        });
+    },
+
     'private state cannot be placed in the public panel' => function (): void {
         expectError('CONFIG_ERROR', function (): void {
             Config::load([

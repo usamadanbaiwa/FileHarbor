@@ -1,7 +1,20 @@
 # API reference
 
-Authenticate management requests with a Bearer API key. Success responses use `{ "success": true, "data": ... }`. Errors use `{ "success": false, "error": { "code": "...", "message": "..." } }`. Public static serving is configured separately.
+Authenticate management requests with a Bearer API key. Success responses use `{ "success": true, "data": ... }`. Errors use `{ "success": false, "error": { "code": "...", "message": "..." } }`. Public files are served at `/{account_id}/{source}` by default. Set `SERVE_FILES=false` to disable built-in delivery.
 
+
+## Public file access
+
+`GET /{account_id}/{source}` serves file bytes without authentication. For example, `/ACCOUNT_ID/assets/photo.png` reads `STORAGE_PATH/ACCOUNT_ID/assets/photo.png`. The account ID is the generated 22-character ID; `source` may contain nested folders. This route is enabled by default and returns 404 when `SERVE_FILES=false`.
+
+Only JPEG, PNG, WebP, PDF, and MP4 content is served. Paths use the same safety rules as the management API. Directories, symlinks, and unsupported content are not served. This is public access: key rotation, account disabling, and account removal do not revoke file URLs. Delete the file or disable serving to remove access through this route.
+
+- `GET`: 200 with file bytes; `HEAD`: the same headers without a body.
+- `Range: bytes=0-1023`, `bytes=1024-`, or `bytes=-1024`: 206 for a satisfiable single range; 416 for an unsatisfiable range. Multiple ranges are not supported and may be ignored or rejected.
+- `ETag` and `Last-Modified` allow conditional requests; a matching condition returns 304.
+- `Content-Type` is detected from file content. Responses include `X-Content-Type-Options: nosniff`, a sandbox content policy, and `Cache-Control: public, max-age=0, must-revalidate`.
+
+File URLs use the server origin, not the management API prefix. Direct Apache/Nginx delivery is optional and uses the URL mapping configured by the operator.
 
 ## File API
 

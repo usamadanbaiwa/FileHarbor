@@ -14,11 +14,13 @@ use FileHarbor\Security\RateLimit;
 use FileHarbor\Storage\Storage;
 use FileHarbor\Routes\PanelRoutes;
 use FileHarbor\Routes\FileRoutes;
+use FileHarbor\Routes\ContentRoutes;
 
 final class App
 {
     private PanelRoutes $panelRoutes;
     private FileRoutes $fileRoutes;
+    private ?ContentRoutes $contentRoutes = null;
 
     public function __construct(Config $config)
     {
@@ -45,6 +47,10 @@ final class App
 
         $this->panelRoutes = new PanelRoutes($config, $registry, $storage, $sessions, $rateLimit);
         $this->fileRoutes = new FileRoutes($config, $registry, $storage, $rateLimit);
+
+        if ($config->serveFiles) {
+            $this->contentRoutes = new ContentRoutes($storage);
+        }
     }
 
     public function handle(Request $request): void
@@ -91,6 +97,10 @@ final class App
             }
 
             $this->fileRoutes->handle($request, $matches[1], $path);
+            return;
+        }
+
+        if ($this->contentRoutes !== null && $this->contentRoutes->handle($request)) {
             return;
         }
 

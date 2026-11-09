@@ -5,6 +5,20 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig } from '../src/config/environment.js';
 import { testSetupToken } from './support/fixtures.js';
 
+test('public file serving defaults on and requires an explicit boolean setting', function fileServingSetting() {
+    const settings = {
+        FILEHARBOR_ENV: 'development',
+        FILEHARBOR_SETUP_TOKEN: testSetupToken
+    };
+
+    assert.equal(loadConfig(settings).serveFiles, true);
+    assert.equal(loadConfig({ ...settings, SERVE_FILES: 'false' }).serveFiles, false);
+
+    assert.throws(function invalidSetting() {
+        loadConfig({ ...settings, SERVE_FILES: 'no' });
+    }, /SERVE_FILES/);
+});
+
 test('configuration rejects missing setup secrets', function missingSecret() {
     assert.throws(function readSettings() {
         loadConfig({

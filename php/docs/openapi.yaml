@@ -11,6 +11,61 @@ servers:
 security:
   - bearerKey: []
 paths:
+  /{account_id}/{source}:
+    servers:
+      - url: /
+    parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^[A-Za-z0-9_-]{22}$' }
+      - name: source
+        in: path
+        required: true
+        description: Account-relative file path, including any folders.
+        schema: { type: string }
+    get:
+      operationId: getPublicFile
+      security: []
+      description: Public file bytes. Enabled by default; SERVE_FILES=false disables this route. Supports a single byte range and conditional requests. Account revocation does not revoke public access.
+      parameters:
+        - name: Range
+          in: header
+          schema: { type: string, example: 'bytes=0-1023' }
+        - name: If-None-Match
+          in: header
+          schema: { type: string }
+        - name: If-Modified-Since
+          in: header
+          schema: { type: string }
+        - name: If-Range
+          in: header
+          schema: { type: string }
+      responses:
+        '200':
+          description: File content with detected Content-Type, Content-Length, ETag, Last-Modified, and Accept-Ranges headers.
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '206':
+          description: Partial content with Content-Range and Content-Length headers.
+        '304':
+          description: Not modified; no response body.
+        '416':
+          description: Unsatisfiable range; Content-Range contains bytes */SIZE.
+        default:
+          $ref: '#/components/responses/Error'
+    head:
+      operationId: headPublicFile
+      security: []
+      description: Public file headers without a body. Disabled when SERVE_FILES=false.
+      responses:
+        '200':
+          description: File headers; no response body.
+        '304':
+          description: Not modified; no response body.
+        default:
+          $ref: '#/components/responses/Error'
   /upload:
     post:
       operationId: uploadFile

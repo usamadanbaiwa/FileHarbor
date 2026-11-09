@@ -12,7 +12,7 @@ The applications expose the same normal management endpoints, account prefixes, 
 | Default media | JPEG, PNG, WebP, PDF, MP4 | JPEG, PNG, WebP, PDF, MP4 |
 | Directory deletion | Empty directories only | Empty by default; `recursive: true` deletes all contents |
 | Commit | Atomic local hard link | Atomic local hard link |
-| Public delivery | Separate static web-server mapping | Separate static web-server mapping |
+| Public delivery | Built-in streaming; optional web-server mapping | Built-in streaming; optional web-server mapping |
 
 Database files are implementation-specific. Move ordinary files and preserve relative paths when changing storage locations; do not assume SQLite files can be exchanged between implementations.
 

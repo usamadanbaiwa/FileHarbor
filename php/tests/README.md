@@ -15,7 +15,7 @@ Optional shortcuts are `composer test` and `composer lint`. Unit tests use tempo
 | `security.php` | Password hashes, keys, setup locking, database paths |
 | `authentication.php` | Persistent rate limits, sessions, CSRF, stale credentials |
 | `storage.php` | Paths, collisions, listings, deletion, error responses |
-| `http.php` | Real HTTP requests, scopes, setup, uploads, MP4, 25 MiB boundary |
+| `http.php` | Real HTTP requests, public downloads, HEAD, ranges, caching, scopes, setup, uploads, MP4, 25 MiB boundary |
 | `HttpServer.php` | Local HTTP test-server and request helpers |
 | `support.php` | Assertions and disposable fixtures |
 

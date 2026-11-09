@@ -9,7 +9,7 @@
 
 <p align="center">
   <strong>A self-hosted file management API for images, documents, and videos.</strong><br>
-  Use your VPS or compatible shared hosting. Upload from any backend. Serve files with your web server.
+  Use your VPS or compatible shared hosting. Upload from any backend. Open uploaded files directly by URL.
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@ Managed storage services such as S3 and R2 offer useful capabilities. FileHarbor
 | **Images, documents, and video** | JPEG, PNG, WebP, PDF, and MP4. Configurable **25 MiB** default limit. |
 | **Ordinary files** | Create folders, list with pagination, and delete by relative path. |
 | **Your own metadata** | Your application stores file records. SQLite holds authentication state. |
-| **Direct public delivery** | Apache, Nginx, or your hosting web server serves the files. |
+| **Public file URLs** | Built-in streaming by default. Optional direct Apache/Nginx delivery. |
 
 No Docker, external database server, or object-storage account required.
 
@@ -70,7 +70,7 @@ php -d upload_max_filesize=26M -d post_max_size=27M -S 127.0.0.1:8080 -t public 
 
 Open `http://127.0.0.1:8080/panel/`, create the administrator, and generate an API account and key.
 
-For shared hosting and production deployment, point the web root at `public/`, enable HTTPS, configure upload limits and static serving, and follow the [full PHP guide](php/README.md).
+For shared hosting and production deployment, point the web root at `public/`, enable HTTPS, configure upload limits, and follow the [full PHP guide](php/README.md).
 
 ## Quick start: Node.js
 
@@ -87,13 +87,13 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 npm start
 ```
 
-Open `http://127.0.0.1:7241/panel/`, create the administrator, and generate an API account and key. For HTTPS, service management, static file delivery, and backups, follow the [full Node.js guide](node/README.md).
+Open `http://127.0.0.1:7241/panel/`, create the administrator, and generate an API account and key. For HTTPS, service management, file serving, and backups, follow the [full Node.js guide](node/README.md).
 
 ## How a request works
 
 ![Request flow: backend to FileHarbor to storage, then web server to browser](docs/assets/request-flow.svg)
 
-Your backend uploads a file. FileHarbor checks the account, permission, path, size, and content type, then returns its relative path. Your application saves that path; a configured static route makes the file publicly accessible.
+Your backend uploads a file. FileHarbor checks the account, permission, path, size, and content type, then returns its relative path. Your application saves that path. FileHarbor serves the public file directly by URL.
 
 ## Upload your first file
 
@@ -132,11 +132,13 @@ The response has a consistent JSON structure:
 }
 ```
 
-Store the returned source and account ID in your application. Configure the public base URL separately. If your web server maps `/content/` to FileHarbor's storage directory, the URL is:
+Store the returned source and account ID in your application. The file is publicly accessible at:
 
 ```text
-https://files.example.com/content/ACCOUNT_ID/assets/profile.png
+https://files.example.com/ACCOUNT_ID/assets/profile.png
 ```
+
+Built-in serving is enabled by default (`SERVE_FILES=true`). Set `SERVE_FILES=false` to use an Apache/Nginx static mapping instead; see your installation guide.
 
 When moving servers, copy your files with the same directory structure and change the public base URL in your application.
 
@@ -155,9 +157,9 @@ See [client integration examples](docs/clients.md), or the `examples/` folder in
 
 ## Deployment
 
-Only the application's `public/` directory belongs in its web root. Keep credentials, SQLite, temporary uploads, and source code private. Configure static storage separately, disable uploaded-script execution, use HTTPS, and back up both files and authentication state.
+Only the application's `public/` directory belongs in its web root. Keep credentials, SQLite, temporary uploads, and source code private. Use HTTPS and back up both files and authentication state.
 
-File type inspection is not malware scanning or video transcoding. Public files are public: rotating a key does not revoke an existing static URL.
+File type inspection is not malware scanning or video transcoding. Public files are public: rotating a key does not revoke an existing public URL.
 
 ## API reference
 

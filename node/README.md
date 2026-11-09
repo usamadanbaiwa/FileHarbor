@@ -2,7 +2,7 @@
 
 **Self-hosted file management over HTTP. Your server. Your files. Your API.**
 
-Upload images, PDF documents, and MP4 videos to storage you control. Manage accounts and scoped API keys in a small administrator panel, keep file metadata in your own application, and serve public assets with your web server.
+Upload images, PDF documents, and MP4 videos to storage you control. Manage accounts and scoped API keys in a small administrator panel, keep file metadata in your own application, and open public files directly by URL.
 
 ## Install from source or a release
 
@@ -74,6 +74,7 @@ See [the complete API](docs/api.md).
 | `FILEHARBOR_URL` | Exact panel origin; HTTPS in production | Local example uses port 7241 |
 | `FILEHARBOR_SETUP_TOKEN` | Random first-install secret, at least 32 characters | None |
 | `HOST`, `PORT` | Listener address | `127.0.0.1`, `7241` |
+| `SERVE_FILES` | Built-in public file serving; set `false` for external serving | `true` |
 | `STORAGE_PATH` | Physical file storage | `./storage` |
 | `FILEHARBOR_STATE_PATH` | Private SQLite and staging directory | `./var` |
 | `MAX_FILE_SIZE_MB` | Maximum file size in MiB | **25** |
@@ -90,16 +91,24 @@ The committed example uses local HTTP settings for testing. Change them for depl
 2. Keep the listener on loopback behind a TLS reverse proxy. Use a process manager or service unit to restart the process when needed.
 3. Run one application process. Sessions, rate limits, and work limits are held in that process and reset on restart.
 4. Put storage and private state outside the source and panel directories, on the same local filesystem.
-5. Configure the web server to deliver public storage through a separate static route.
+5. Keep built-in file serving enabled, or configure optional direct web-server delivery.
 6. Back up storage and the private SQLite registry, protect the backups, and test restoration.
 
-If `https://files.example.com/content/` maps to `STORAGE_PATH`, an account's file URL is:
+## Serve public files
+
+Files are public by default. After uploading `assets/photo.png`, open:
 
 ```text
-https://files.example.com/content/ACCOUNT_ID/assets/clip.mp4
+https://files.example.com/ACCOUNT_ID/assets/photo.png
 ```
 
-FileHarbor itself serves the API and panel, not uploaded files. Disable directory indexing and script execution in the static route. Send correct content types and `X-Content-Type-Options: nosniff`. Never expose `var/`, `.env`, or source files.
+FileHarbor streams `STORAGE_PATH/ACCOUNT_ID/assets/photo.png`. No separate storage mapping is needed. The account ID is part of the URL, not a password. Viewing files requires no API key, and disabling or removing an API account does not make its existing files private.
+
+Public responses support `GET`, `HEAD`, single byte ranges for video seeking, and conditional requests using ETag or Last-Modified. Caches must revalidate before reuse. Directory listings are not exposed through public URLs; use the authenticated listing API. Public file requests count toward this process's request rate limit.
+
+To serve files directly through Apache or Nginx, set `SERVE_FILES=false` and configure a static mapping to `STORAGE_PATH`. For example, mapping `/content/` produces `https://files.example.com/content/ACCOUNT_ID/assets/photo.png`. Update your application's public base URL to match. Disabling built-in serving alone does not configure a web-server mapping.
+
+Disable script execution and directory indexing in that mapping, set correct content types, and send `X-Content-Type-Options: nosniff`. Keep source, credentials, SQLite, and staging files private.
 
 The API's default limit is 25 MiB. Set your proxy body limit slightly higher, such as 26 MiB, to allow multipart overhead. Clients behind a proxy share its observed source address unless you configure a trusted deployment layer to handle limits. Do not trust arbitrary forwarded headers.
 

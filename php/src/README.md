@@ -14,6 +14,7 @@
 
 Useful starting points:
 
+- Public files: `Routes/ContentRoutes.php` → `Storage/Storage.php`.
 - Upload: `Routes/FileRoutes.php` → `Storage/Upload.php` → `Storage/Storage.php`.
 - Login: `Routes/PanelRoutes.php` → `Security/Credentials.php` → `Security/Sessions.php`.
 - Account queries: `Repositories/Registry.php`.

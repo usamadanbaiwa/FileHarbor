@@ -2,7 +2,7 @@
 
 FileHarbor separates application metadata from physical file management.
 
-The main application chooses filenames and relative folders, sends authenticated HTTP requests, and stores returned metadata alongside its own user/business records. FileHarbor manages physical files and access credentials. A separately configured web-server static route delivers public files.
+The main application chooses filenames and relative folders, sends authenticated HTTP requests, and stores returned metadata alongside its own user/business records. FileHarbor manages physical files and access credentials. Built-in public serving streams files at `/{account_id}/{source}`. Set `SERVE_FILES=false` to use a separately configured web-server static route instead.
 
 ## Independent implementations
 

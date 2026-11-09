@@ -35,11 +35,16 @@ final class HttpTestServer
             'FILEHARBOR_SETUP_TOKEN' => $config->setupToken,
             'FILEHARBOR_STATE_PATH' => $config->state,
             'STORAGE_PATH' => $config->storage,
+            'SERVE_FILES' => 'false',
             'MAX_FILE_SIZE_MB' => (string) ($config->maxBytes / 1024 / 1024),
             'ALLOWED_MIME_TYPES' => implode(',', $config->allowed),
             'API_RATE_LIMIT' => '100',
             'API_RATE_WINDOW_SECONDS' => '60',
         ]);
+
+        if ($config->serveFiles) {
+            $environment['SERVE_FILES'] = 'true';
+        }
 
         $log = dirname($config->state) . '/server.log';
 
@@ -127,6 +132,7 @@ final class HttpTestServer
         }
 
         $cookie = '';
+        $responseHeaders = [];
         $connection = curl_init($this->origin . $path);
 
         curl_setopt_array($connection, [
@@ -135,7 +141,12 @@ final class HttpTestServer
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 1,
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_HEADERFUNCTION => function ($handle, string $line) use (&$cookie): int {
+            CURLOPT_HEADERFUNCTION => function ($handle, string $line) use (&$cookie, &$responseHeaders): int {
+                if (str_contains($line, ':')) {
+                    [$name, $value] = explode(':', $line, 2);
+                    $responseHeaders[strtolower(trim($name))] = trim($value);
+                }
+
                 if (str_starts_with(strtolower($line), 'set-cookie:')) {
                     $value = trim(substr($line, strlen('set-cookie:')));
                     $cookie = explode(';', $value)[0];
@@ -144,6 +155,10 @@ final class HttpTestServer
                 return strlen($line);
             },
         ]);
+
+        if ($method === 'HEAD') {
+            curl_setopt($connection, CURLOPT_NOBODY, true);
+        }
 
         if ($body !== null) {
             curl_setopt($connection, CURLOPT_POSTFIELDS, $body);
@@ -167,6 +182,7 @@ final class HttpTestServer
                 'status' => $status,
                 'body' => $body,
                 'cookie' => $cookie,
+                'headers' => $responseHeaders,
             ];
         } finally {
             unset($connection);
@@ -242,7 +258,7 @@ final class HttpTestServer
     }
 }
 
-function withHttpServer(callable $operation): void
+function withHttpServer(callable $operation, array $settings = []): void
 {
     $base = dirname(__DIR__) . '/var/tests';
 
@@ -254,13 +270,13 @@ function withHttpServer(callable $operation): void
 
     mkdir($root, 0700);
 
-    $config = Config::load([
+    $config = Config::load(array_merge([
         'FILEHARBOR_ENV' => 'development',
         'FILEHARBOR_URL' => 'http://127.0.0.1:8080',
         'FILEHARBOR_SETUP_TOKEN' => str_repeat('a', 32),
         'STORAGE_PATH' => $root . '/storage',
         'FILEHARBOR_STATE_PATH' => $root . '/state',
-    ]);
+    ], $settings));
 
     try {
         $server = new HttpTestServer($config);

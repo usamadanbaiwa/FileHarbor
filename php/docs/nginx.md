@@ -21,13 +21,6 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
-    # Only static assets belong here; never point at private state or source.
-    location ^~ /content/ {
-        alias /srv/fileharbor/storage/;
-        autoindex off;
-        add_header X-Content-Type-Options nosniff always;
-    }
-
     location / {
         rewrite ^ /index.php last;
     }
@@ -49,6 +42,18 @@ server {
 }
 ```
 
-The static `^~ /content/` location must never fall through to a PHP handler. Review configured MIME mappings, provider restrictions, and filesystem ownership. PHP's `upload_max_filesize` and `post_max_size` must also be set; Nginx's body limit alone does not configure PHP.
-
 Set `FILEHARBOR_URL=https://files.example.com` in the private PHP configuration and verify setup, login, Authorization forwarding, uploads, public serving, and static script non-execution before use.
+
+## Optional direct file serving
+
+Built-in serving works with the configuration above. To let Nginx serve storage directly, set `SERVE_FILES=false` and add this location inside the server block:
+
+```nginx
+    location ^~ /content/ {
+        alias /srv/fileharbor/storage/;
+        autoindex off;
+        add_header X-Content-Type-Options nosniff always;
+    }
+```
+
+Public URLs then use `/content/ACCOUNT_ID/assets/photo.png`. Only map the storage directory. Keep directory indexing and script execution disabled, configure correct MIME types, and keep private state and source outside the mapping.

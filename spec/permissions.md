@@ -10,4 +10,4 @@
 | `directories:delete` | Delete a directory; `recursive: true` also removes its contents (currently Node.js only). Never the account root |
 | `files:transfer` | Initiate a future bulk transfer |
 
-Permissions are deny-by-default. Every operation also requires account authentication and path containment. A permission never grants access outside the account's root. `files:transfer` is reserved and cannot be assigned in the current implementation. Public static access is independent of API permissions.
+Permissions are deny-by-default. Every operation also requires account authentication and path containment. A permission never grants access outside the account's root. `files:transfer` is reserved and cannot be assigned in the current implementation. Public file access is independent of API permissions, account revocation, and account removal.

@@ -10,7 +10,7 @@
 - Store safe credential verification material, suppress secrets in logs, and reveal generated keys only once.
 - Protect setup and panel sessions, state-changing forms, and login attempts.
 - Avoid revealing paths, stack traces, or credentials in public errors.
-- Treat public static URLs as public; API revocation cannot revoke static access.
+- Treat public file URLs as public; account removal, disabling, or key revocation does not revoke public access. Set `SERVE_FILES=false` to disable built-in delivery.
 - Back up files and SQLite configuration together, and document restore procedures.
 
 File type checks do not scan for malware. Keep the server patched, restrict filesystem access, and maintain backups.

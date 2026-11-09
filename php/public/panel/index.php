@@ -20,7 +20,7 @@ header('Content-Type: text/html; charset=utf-8');
 <body>
   <main>
     <h1>FileHarbor</h1>
-    <p>Manage API access. Uploaded files are served by your web server.</p>
+    <p>Manage API access. Public files are available at /ACCOUNT_ID/folder/filename.</p>
     <p id="status" role="status"></p>
     <pre id="key" hidden></pre>
     <section id="setup" hidden>

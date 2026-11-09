@@ -69,6 +69,18 @@ function readMimeTypes(environment) {
 }
 
 export function loadConfig(environment = process.env) {
+    let serveFiles = true;
+
+    if (environment.SERVE_FILES !== undefined) {
+        requireValue(
+            environment.SERVE_FILES === 'true' || environment.SERVE_FILES === 'false',
+            'CONFIG_ERROR',
+            'SERVE_FILES must be true or false.'
+        );
+
+        serveFiles = environment.SERVE_FILES === 'true';
+    }
+
     const storage = path.resolve(environment.STORAGE_PATH || './storage');
     const state = path.resolve(environment.FILEHARBOR_STATE_PATH || './var');
 
@@ -90,6 +102,7 @@ export function loadConfig(environment = process.env) {
 
     return {
         storage: storage,
+        serveFiles: serveFiles,
         state: state,
         production: production,
         origin: origin,

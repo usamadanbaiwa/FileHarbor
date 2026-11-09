@@ -14,6 +14,7 @@
 
 Useful starting points:
 
+- Public files: `routes/content.js` → `storage/local.js`.
 - Upload: `routes/files.js` → `storage/upload.js` → `storage/local.js`.
 - Login: `routes/panel.js` → `security/credentials.js` → `security/sessions.js`.
 - API credentials: `repositories/registry.js`.

@@ -3,7 +3,7 @@
 Your application's language does not have to match the server implementation. FileHarbor is a REST API. Use the HTTP client you already maintain, send a Bearer key, and upload files as multipart/form-data.
 
 - PHP applications can use [Guzzle or Symfony HTTP Client](../php/examples/README.md).
-- JavaScript applications can use [Fetch](../node/examples/README.md).
+- JavaScript applications can use Fetch with the multipart fields in the [API reference](../node/docs/api.md).
 - Python applications can use Requests, as shown below.
 - cURL works for shell scripts and troubleshooting.
 

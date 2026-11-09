@@ -14,6 +14,7 @@ HTTP tests start a local server and create temporary databases and files under `
 | --- | --- |
 | `config.test.js`, `paths.test.js` | Configuration, directory isolation, and database paths |
 | `files.test.js`, `video.test.js` | Uploads, MP4, exact size boundary, pagination, paths, deletion |
+| `content.test.js` | Public downloads, HEAD, ranges, cache validation, unsafe paths, and disabled serving |
 | `panel.test.js`, `public.test.js` | Setup, credentials, accounts, sessions, and response contract |
 | `security.test.js` | Revocation during uploads, interruptions, resource limits, private paths |
 | `support/` | HTTP fixture helpers and public-contract assertions |

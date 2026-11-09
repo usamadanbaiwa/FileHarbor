@@ -14,6 +14,7 @@ final class Config
     public string $origin;
     public string $setupToken;
     public bool $production;
+    public bool $serveFiles;
     public int $maxBytes;
     public int $rateLimit;
     public int $rateWindow;
@@ -50,6 +51,7 @@ final class Config
                 'FILEHARBOR_SETUP_TOKEN',
                 'STORAGE_PATH',
                 'FILEHARBOR_STATE_PATH',
+                'SERVE_FILES',
                 'MAX_FILE_SIZE_MB',
                 'ALLOWED_MIME_TYPES',
                 'API_RATE_LIMIT',
@@ -75,6 +77,16 @@ final class Config
         }
 
         $config = new self();
+        $serveFiles = self::text($settings, 'SERVE_FILES', 'true');
+
+        ApiError::require(
+            in_array($serveFiles, ['true', 'false'], true),
+            'CONFIG_ERROR',
+            'SERVE_FILES must be true or false.',
+            500
+        );
+
+        $config->serveFiles = $serveFiles === 'true';
         $base = dirname(__DIR__, 2);
 
         $config->storage = Paths::absolutePath(self::text($settings, 'STORAGE_PATH', $base . '/storage'));
