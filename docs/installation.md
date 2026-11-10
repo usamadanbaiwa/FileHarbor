@@ -7,6 +7,8 @@ Choose an installation:
 
 Download the matching release archive, or extract that folder from the repository. All setup instructions, tests, examples, and tools are included with it.
 
+For a PHP host that requires `public_html/`, rename `public/` and set `FILEHARBOR_DOCUMENT_ROOT=public_html`; follow the [shared-hosting layout](../php/README.md#hosts-that-require-public_html). Keep source and private configuration outside the public folder.
+
 Create a private setup secret, initialize the administrator through the panel, and create an API account with the minimum required permissions. Configure HTTPS, private state, public file access, upload limits, and backups before exposing the service.
 
 For an overview and short setup examples, see the [root README](../README.md).

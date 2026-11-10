@@ -9,4 +9,6 @@ if (in_array($path, ['/panel/style.css', '/panel/script.js'], true)) {
     return false;
 }
 
-require __DIR__ . '/public/index.php';
+require_once __DIR__ . '/src/bootstrap.php';
+
+runFileHarbor();

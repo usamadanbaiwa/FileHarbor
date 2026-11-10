@@ -20,10 +20,22 @@ final class App
 {
     private PanelRoutes $panelRoutes;
     private FileRoutes $fileRoutes;
+    private string $documentRoot;
     private ?ContentRoutes $contentRoutes = null;
 
     public function __construct(Config $config)
     {
+        $this->documentRoot = $config->documentRoot;
+
+        ApiError::require(
+            is_file($this->documentRoot . '/index.php') &&
+            is_file($this->documentRoot . '/panel/index.php') &&
+            !is_link($this->documentRoot),
+            'CONFIG_ERROR',
+            'The configured document root must contain the FileHarbor public files.',
+            500
+        );
+
         Storage::prepareRoot($config->storage);
         Storage::prepareRoot($config->state);
         Storage::prepareRoot($config->state . '/uploads');
@@ -71,7 +83,7 @@ final class App
 
         if ($request->method === 'GET' && $request->path === '/panel/') {
             
-            require dirname(__DIR__) . '/public/panel/index.php';
+            require $this->documentRoot . '/panel/index.php';
             return;
         }
 

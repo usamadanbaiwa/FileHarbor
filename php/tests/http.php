@@ -5,6 +5,24 @@ declare(strict_types=1);
 require_once __DIR__ . '/HttpServer.php';
 
 return [
+    'HTTP works with a renamed public_html document root' => function (): void {
+        withHttpServer(function (HttpTestServer $server): void {
+            expectSame(200, $server->request('/panel/', ['raw' => true])['status']);
+            expectSame(200, $server->request('/panel/style.css', ['raw' => true])['status']);
+            expectSame(200, $server->request('/panel/script.js', ['raw' => true])['status']);
+            expectSame(201, $server->setup()['status']);
+            expectSame(200, $server->login()['status']);
+
+            $account = $server->account();
+            $image = __DIR__ . '/fixtures/image.png';
+
+            expectSame(201, $server->upload($account, 'image.png', $image)['status']);
+            expectSame(file_get_contents($image), $server->request('/' . $account['id'] . '/image.png', ['raw' => true])['body']);
+            expectSame(404, $server->request('/src/App.php')['status']);
+            expectSame(404, $server->request('/config/config.php')['status']);
+        }, ['FILEHARBOR_DOCUMENT_ROOT' => 'public_html']);
+    },
+
     'HTTP public files support GET HEAD caching and video ranges' => function (): void {
         withHttpServer(function (HttpTestServer $server): void {
             $server->setup();
@@ -41,6 +59,29 @@ return [
 
             expectSame(304, $cached['status']);
             expectSame('', $cached['body']);
+
+            $gzipTag = substr($response['headers']['etag'], 0, -1) . '-gzip"';
+            $compressedCache = $server->request($url, [
+                'raw' => true,
+                'headers' => [
+                    'If-None-Match' => $gzipTag,
+                    'If-Modified-Since' => $response['headers']['last-modified'],
+                ],
+            ]);
+
+            expectSame(304, $compressedCache['status']);
+            expectSame('', $compressedCache['body']);
+
+            $changed = $server->request($url, [
+                'raw' => true,
+                'headers' => [
+                    'If-None-Match' => 'W/"different-file-gzip"',
+                    'If-Modified-Since' => $response['headers']['last-modified'],
+                ],
+            ]);
+
+            expectSame(200, $changed['status']);
+            expectSame(file_get_contents($image), $changed['body']);
 
             $video = __DIR__ . '/fixtures/video-header.mp4';
             expectSame(201, $server->upload($account, 'clip.mp4', $video)['status']);

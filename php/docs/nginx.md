@@ -1,6 +1,6 @@
 # PHP with Nginx
 
-Replace the paths, domain, PHP-FPM socket, and TLS certificate settings for your server. This configuration serves the panel at `/panel/`.
+Replace the paths, domain, PHP-FPM socket, and TLS certificate settings for your server. This configuration serves the panel at `/panel/`. If you rename `public/` to `public_html/`, set `FILEHARBOR_DOCUMENT_ROOT=public_html` and change the Nginx `root` directive to `/srv/fileharbor/public_html`.
 
 ```nginx
 server {

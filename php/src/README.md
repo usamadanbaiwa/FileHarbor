@@ -18,7 +18,7 @@ Useful starting points:
 - Upload: `Routes/FileRoutes.php` → `Storage/Upload.php` → `Storage/Storage.php`.
 - Login: `Routes/PanelRoutes.php` → `Security/Credentials.php` → `Security/Sessions.php`.
 - Account queries: `Repositories/Registry.php`.
-- Directory configuration: `Config/Config.php` and `Support/Paths.php`.
+- Directory configuration: `Config/Config.php` and `Support/Paths.php`. `FILEHARBOR_DOCUMENT_ROOT` selects the public folder; `Config::$documentRoot` contains its absolute path.
 - Error responses: `Http/Response.php` and `Http/ApiError.php`.
 
 The panel's JavaScript sends requests to the panel endpoints. Credentials are managed on the server.

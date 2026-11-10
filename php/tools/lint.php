@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
+require_once $root . '/src/bootstrap.php';
+
+$documentRoot = \FileHarbor\Config\Config::documentRoot();
 $files = [$root . '/router.php', $root . '/config/config.example.php'];
 
-foreach (['src', 'public', 'tests', 'tools', 'examples'] as $directory) {
+foreach ([$root . '/src', $documentRoot, $root . '/tests', $root . '/tools', $root . '/examples'] as $directory) {
     $iterator = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS)
+        new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)
     );
 
     foreach ($iterator as $file) {
