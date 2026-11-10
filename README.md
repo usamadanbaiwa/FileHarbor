@@ -70,7 +70,9 @@ php -d upload_max_filesize=26M -d post_max_size=27M -S 127.0.0.1:8080 -t public 
 
 Open `http://127.0.0.1:8080/panel/`, create the administrator, and generate an API account and key.
 
-For shared hosting and production deployment, point the web root at `public/`, enable HTTPS, configure upload limits, and follow the [full PHP guide](php/README.md).
+If your host requires `public_html/`, rename the PHP public folder and set `FILEHARBOR_DOCUMENT_ROOT=public_html`; see [shared-hosting setup](php/README.md#hosts-that-require-public_html).
+
+For shared hosting and production deployment, point the web root at the configured public folder (`public/` by default), enable HTTPS, configure upload limits, and follow the [full PHP guide](php/README.md).
 
 ## Quick start: Node.js
 
@@ -157,7 +159,7 @@ See [client integration examples](docs/clients.md), or the `examples/` folder in
 
 ## Deployment
 
-Only the application's `public/` directory belongs in its web root. Keep credentials, SQLite, temporary uploads, and source code private. Use HTTPS and back up both files and authentication state.
+Only the application's public folder belongs in its web root: `public/` by default, or the renamed folder configured for PHP. Keep credentials, SQLite, temporary uploads, and source code private. Use HTTPS and back up both files and authentication state.
 
 File type inspection is not malware scanning or video transcoding. Public files are public: rotating a key does not revoke an existing public URL.
 

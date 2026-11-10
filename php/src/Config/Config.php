@@ -9,6 +9,7 @@ use FileHarbor\Support\Paths;
 
 final class Config
 {
+    public string $documentRoot;
     public string $storage;
     public string $state;
     public string $origin;
@@ -30,41 +31,7 @@ final class Config
         );
 
         if ($settings === null) {
-            $settings = [];
-
-            $filename = dirname(__DIR__, 2) . '/config/config.php';
-
-            if (is_file($filename)) {
-                $settings = require $filename;
-
-                ApiError::require(
-                    is_array($settings),
-                    'CONFIG_ERROR',
-                    'Configuration must return an array.',
-                    500
-                );
-            }
-
-            $names = [
-                'FILEHARBOR_ENV',
-                'FILEHARBOR_URL',
-                'FILEHARBOR_SETUP_TOKEN',
-                'STORAGE_PATH',
-                'FILEHARBOR_STATE_PATH',
-                'SERVE_FILES',
-                'MAX_FILE_SIZE_MB',
-                'ALLOWED_MIME_TYPES',
-                'API_RATE_LIMIT',
-                'API_RATE_WINDOW_SECONDS',
-            ];
-
-            foreach ($names as $name) {
-                $value = getenv($name);
-
-                if ($value !== false) {
-                    $settings[$name] = $value;
-                }
-            }
+            $settings = self::readSettings();
         }
 
         foreach (['pdo_sqlite', 'fileinfo'] as $extension) {
@@ -100,7 +67,8 @@ final class Config
             500
         );
 
-        $public = Paths::absolutePath($base . '/public');
+        $config->documentRoot = self::documentRoot($settings);
+        $public = $config->documentRoot;
         $source = Paths::absolutePath($base . '/src');
 
         foreach ([$config->storage, $config->state] as $directory) {
@@ -153,6 +121,68 @@ final class Config
 
 
         return $config;
+    }
+
+    public static function documentRoot(?array $settings = null): string
+    {
+        if ($settings === null) {
+            $settings = self::readSettings();
+        }
+
+        $folder = self::text($settings, 'FILEHARBOR_DOCUMENT_ROOT', 'public');
+        $reserved = ['src', 'config', 'vendor', 'var', 'storage', 'tests', 'tools', 'docs', 'examples'];
+
+        ApiError::require(
+            preg_match('/^[A-Za-z][A-Za-z0-9_-]{0,63}$/D', $folder) === 1 &&
+            !in_array(strtolower($folder), $reserved, true),
+            'CONFIG_ERROR',
+            'FILEHARBOR_DOCUMENT_ROOT must name a public folder such as public or public_html.',
+            500
+        );
+
+        return Paths::absolutePath(dirname(__DIR__, 2) . '/' . $folder);
+    }
+
+    private static function readSettings(): array
+    {
+        $settings = [];
+
+        $filename = dirname(__DIR__, 2) . '/config/config.php';
+
+        if (is_file($filename)) {
+            $settings = require $filename;
+
+            ApiError::require(
+                is_array($settings),
+                'CONFIG_ERROR',
+                'Configuration must return an array.',
+                500
+            );
+        }
+
+        $names = [
+            'FILEHARBOR_DOCUMENT_ROOT',
+            'FILEHARBOR_ENV',
+            'FILEHARBOR_URL',
+            'FILEHARBOR_SETUP_TOKEN',
+            'STORAGE_PATH',
+            'FILEHARBOR_STATE_PATH',
+            'SERVE_FILES',
+            'MAX_FILE_SIZE_MB',
+            'ALLOWED_MIME_TYPES',
+            'API_RATE_LIMIT',
+            'API_RATE_WINDOW_SECONDS',
+        ];
+
+        foreach ($names as $name) {
+            $value = getenv($name);
+
+            if ($value !== false) {
+                $settings[$name] = $value;
+            }
+        }
+
+        return $settings;
     }
 
     private static function text(array $settings, string $name, string $default): string

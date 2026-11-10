@@ -17,6 +17,8 @@ Tests create isolated SQLite and storage fixtures under `var/tests/`. Never use 
 
 `App.php` wires request handlers. Settings live in `src/Config/`, requests/responses in `Http/`, endpoint handling in `Routes/`, authentication in `Security/`, filesystem operations in `Storage/`, SQL in `Repositories/`, and reusable path helpers in `Support/`.
 
+Use `Config::documentRoot()` or the loaded configuration when resolving public files. Do not hardcode the public folder name; installations can use `public_html/` or another configured name.
+
 Follow PSR-12 with four-space indentation. Use braces for all control flow, one statement per line, descriptive methods, and blank lines between logical steps. Avoid nullish/nullsafe operators, ternaries, and arrow-function shortcuts. Nullable type declarations are fine.
 
 Keep comments brief and useful. Update local API docs and client examples with public changes. Preserve credential hashing, scoped authorization, CSRF protection, account roots, no-overwrite commits, and safe temporary-file cleanup.

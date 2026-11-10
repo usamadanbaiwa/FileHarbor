@@ -126,10 +126,16 @@ final class ContentRoutes
         $condition = $request->header('if-none-match');
 
         if ($condition !== '') {
+            $currentTag = substr($etag, 2);
+
+            // Some hosting compression filters append -gzip after PHP generates the ETag.
+            $gzipTag = substr($currentTag, 0, -1) . '-gzip"';
+
             foreach (explode(',', $condition) as $candidate) {
                 $candidate = trim($candidate);
+                $candidateTag = preg_replace('/^W\//', '', $candidate);
 
-                if ($candidate === '*' || preg_replace('/^W\//', '', $candidate) === substr($etag, 2)) {
+                if ($candidate === '*' || $candidateTag === $currentTag || $candidateTag === $gzipTag) {
                     return true;
                 }
             }

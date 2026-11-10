@@ -28,9 +28,20 @@ final class HttpTestServer
         $port = substr($address, strrpos($address, ':') + 1);
         $this->origin = 'http://127.0.0.1:' . $port;
         $root = dirname(__DIR__);
+        $documentFolder = basename($config->documentRoot);
+
+        if ($documentFolder !== 'public') {
+            $root = dirname($config->state) . '/application';
+
+            mkdir($root);
+            $this->copyDirectory(dirname(__DIR__) . '/src', $root . '/src');
+            $this->copyDirectory(dirname(__DIR__) . '/public', $root . '/' . $documentFolder);
+            copy(dirname(__DIR__) . '/router.php', $root . '/router.php');
+        }
 
         $environment = array_merge(getenv(), [
             'FILEHARBOR_ENV' => 'development',
+            'FILEHARBOR_DOCUMENT_ROOT' => $documentFolder,
             'FILEHARBOR_URL' => $this->origin,
             'FILEHARBOR_SETUP_TOKEN' => $config->setupToken,
             'FILEHARBOR_STATE_PATH' => $config->state,
@@ -54,7 +65,7 @@ final class HttpTestServer
             '-d', 'post_max_size=27M',
             '-d', 'display_errors=0',
             '-S', '127.0.0.1:' . $port,
-            '-t', $root . '/public',
+            '-t', $root . '/' . $documentFolder,
             $root . '/router.php',
         ], [
             0 => ['pipe', 'r'],
@@ -93,6 +104,23 @@ final class HttpTestServer
         } catch (Throwable $error) {
             $this->close();
             throw $error;
+        }
+    }
+
+    private function copyDirectory(string $source, string $destination): void
+    {
+        mkdir($destination);
+
+        foreach (scandir($source) as $name) {
+            if ($name === '.' || $name === '..') {
+                continue;
+            }
+
+            if (is_dir($source . '/' . $name)) {
+                $this->copyDirectory($source . '/' . $name, $destination . '/' . $name);
+            } else {
+                copy($source . '/' . $name, $destination . '/' . $name);
+            }
         }
     }
 

@@ -11,7 +11,7 @@ Only JPEG, PNG, WebP, PDF, and MP4 content is served. Paths use the same safety 
 
 - `GET`: 200 with file bytes; `HEAD`: the same headers without a body.
 - `Range: bytes=0-1023`, `bytes=1024-`, or `bytes=-1024`: 206 for a satisfiable single range; 416 for an unsatisfiable range. Multiple ranges are not supported and may be ignored or rejected.
-- `ETag` and `Last-Modified` allow conditional requests; a matching condition returns 304.
+- `ETag` and `Last-Modified` allow conditional requests; a matching condition returns 304. Cache validation recognizes the `-gzip` suffix added by some hosting compression filters. A different ETag still returns the file, even when the supplied modification date matches.
 - `Content-Type` is detected from file content. Responses include `X-Content-Type-Options: nosniff`, a sandbox content policy, and `Cache-Control: public, max-age=0, must-revalidate`.
 
 File URLs use the server origin, not the management API prefix. Direct Apache/Nginx delivery is optional and uses the URL mapping configured by the operator.

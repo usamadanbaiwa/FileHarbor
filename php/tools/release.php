@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
+require_once $root . '/src/bootstrap.php';
+
+$documentFolder = basename(\FileHarbor\Config\Config::documentRoot());
 $version = '';
 
 if (isset($argv[1])) {
@@ -34,12 +37,16 @@ if ($result !== true) {
 }
 
 $entries = [
-    'src', 'public', 'config/config.example.php', 'tests', 'tools', 'docs', 'examples',
+    'src', 'config/config.example.php', 'tests', 'tools', 'docs', 'examples',
     'README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'composer.json', 'composer.lock', '.editorconfig', 'router.php',
 ];
 
-function addReleaseEntry(ZipArchive $archive, string $root, string $relative): void
+function addReleaseEntry(ZipArchive $archive, string $root, string $relative, ?string $destination = null): void
 {
+    if ($destination === null) {
+        $destination = $relative;
+    }
+
     if ($relative === 'config/config.php') {
         return;
     }
@@ -56,18 +63,21 @@ function addReleaseEntry(ZipArchive $archive, string $root, string $relative): v
                 continue;
             }
 
-            addReleaseEntry($archive, $root, $relative . '/' . $name);
+            addReleaseEntry($archive, $root, $relative . '/' . $name, $destination . '/' . $name);
         }
 
         return;
     }
 
-    if (!$archive->addFile($filename, $relative)) {
+    if (!$archive->addFile($filename, $destination)) {
         throw new RuntimeException('Cannot add release file: ' . $relative);
     }
 }
 
 try {
+    // Release packages use the default folder name, even when built from a renamed installation.
+    addReleaseEntry($archive, $root, $documentFolder, 'public');
+
     $license = $root . '/LICENSE';
 
     if (!file_exists($license)) {

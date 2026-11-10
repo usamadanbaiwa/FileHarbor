@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'FILEHARBOR_DOCUMENT_ROOT' => 'public',
     'FILEHARBOR_ENV' => 'development',
     'FILEHARBOR_URL' => 'http://127.0.0.1:7241',
     'FILEHARBOR_SETUP_TOKEN' => '',
