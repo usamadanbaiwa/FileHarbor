@@ -13,6 +13,7 @@ return [
     'FILEHARBOR_STATE_PATH' => dirname(__DIR__) . '/var',
     'MAX_FILE_SIZE_MB' => 25,
     'ALLOWED_MIME_TYPES' => 'image/jpeg,image/png,image/webp,application/pdf,video/mp4',
+    'MIME_TYPE_EXTENSIONS' => '{}',
     'API_RATE_LIMIT' => 100,
     'API_RATE_WINDOW_SECONDS' => 60,
 ];

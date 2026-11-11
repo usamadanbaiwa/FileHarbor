@@ -1,3 +1,4 @@
+import { matchesFormat, normalizeMimeType } from '../security/formats.js';
 import Busboy from 'busboy';
 import path from 'node:path';
 import { createWriteStream } from 'node:fs';
@@ -6,14 +7,6 @@ import { pipeline } from 'node:stream/promises';
 import { fileTypeFromFile } from 'file-type';
 import { ApiError, requireValue } from '../http/responses.js';
 import { segments } from '../security/paths.js';
-
-const allowedExtensions = {
-    'image/jpeg': ['jpg', 'jpeg'],
-    'image/png': ['png'],
-    'image/webp': ['webp'],
-    'application/pdf': ['pdf'],
-    'video/mp4': ['mp4']
-};
 
 function createParser(request, maximumSize) {
     const contentType = request.headers['content-type'] || '';
@@ -166,7 +159,7 @@ async function readMultipart(request, parser, state, maximumSize) {
     }
 }
 
-async function inspectFile(temporaryFile, name, allowedMimeTypes) {
+async function inspectFile(temporaryFile, name, config) {
     let type;
 
     try {
@@ -175,11 +168,11 @@ async function inspectFile(temporaryFile, name, allowedMimeTypes) {
         type = undefined;
     }
 
-    const extension = name.split('.').pop().toLowerCase();
     let supported = false;
 
-    if (type && allowedMimeTypes.includes(type.mime)) {
-        supported = allowedExtensions[type.mime].includes(extension);
+    if (type) {
+        type.mime = normalizeMimeType(type.mime);
+        supported = matchesFormat(type.mime, name, config);
     }
 
     requireValue(
@@ -243,7 +236,7 @@ export async function upload(request, config, storage, account, authorizeCommit)
 
         segments(folder, true);
 
-        const type = await inspectFile(temporaryFile, name, config.allowed);
+        const type = await inspectFile(temporaryFile, name, config);
         const details = await stat(temporaryFile);
 
         requireValue(

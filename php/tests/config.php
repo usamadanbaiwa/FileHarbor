@@ -6,6 +6,34 @@ use FileHarbor\Config\Config;
 use FileHarbor\Http\Request;
 
 return [
+    'format registry accepts extra types aliases and custom extensions' => function (): void {
+        $settings = [
+            'FILEHARBOR_ENV' => 'development',
+            'FILEHARBOR_SETUP_TOKEN' => str_repeat('a', 32),
+        ];
+        $config = Config::load(array_merge($settings, [
+            'ALLOWED_MIME_TYPES' => 'image/gif,audio/mpeg,audio/x-wav,application/zip,application/gzip,image/tiff',
+            'MIME_TYPE_EXTENSIONS' => '{"image/tiff":["tif","tiff"]}',
+        ]));
+
+        expectSame(['image/gif', 'audio/mpeg', 'audio/wav', 'application/zip', 'application/gzip', 'image/tiff'], $config->allowed);
+        expectSame(['tif', 'tiff'], $config->formats['image/tiff']);
+
+        foreach (['[]', 'null', '{', '{"image/tiff":[]}', '{"image/tiff":"tif"}',
+            '{"image/tiff":["php"]}', '{"image/svg+xml":["svg"]}', '{"text/html":["html"]}',
+            '{"image/tiff":["../tif"]}', '{"image/tiff":[12]}'] as $mapping) {
+            expectError('CONFIG_ERROR', function () use ($settings, $mapping): void {
+                Config::load(array_merge($settings, ['MIME_TYPE_EXTENSIONS' => $mapping]));
+            });
+        }
+
+        foreach (['image/tiff', '*/*', '', 'image/gif,'] as $types) {
+            expectError('CONFIG_ERROR', function () use ($settings, $types): void {
+                Config::load(array_merge($settings, ['ALLOWED_MIME_TYPES' => $types]));
+            });
+        }
+    },
+
     'public cache lifetime defaults to one day and accepts zero' => function (): void {
         $settings = [
             'FILEHARBOR_ENV' => 'development',

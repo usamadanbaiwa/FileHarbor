@@ -27,7 +27,7 @@ paths:
     get:
       operationId: getPublicFile
       security: []
-      description: Public file bytes. Enabled by default; SERVE_FILES=false disables this route. Supports a single byte range and conditional requests. PUBLIC_CACHE_MAX_AGE controls public cache freshness in seconds, defaulting to 86400; 0 requires revalidation. Account revocation does not revoke public access.
+      description: Public file bytes. Enabled by default; SERVE_FILES=false disables this route. Supports a single byte range and conditional requests. PUBLIC_CACHE_MAX_AGE controls public cache freshness in seconds, defaulting to 86400; 0 requires revalidation. Detected MIME and extension must match the configured allowlist and MIME_TYPE_EXTENSIONS registry. Archives and custom types are attachments. Account revocation does not revoke public access.
       parameters:
         - name: Range
           in: header
@@ -69,7 +69,7 @@ paths:
   /upload:
     post:
       operationId: uploadFile
-      description: Requires files:upload. Directory must exist. No overwrites. MIME content and filename extension must match the configured allowlist.
+      description: Requires files:upload. Directory must exist. No overwrites. MIME content and filename extension must match the configured allowlist and MIME_TYPE_EXTENSIONS registry. The default formats are unchanged; registered extra formats are opt-in.
       requestBody:
         required: true
         content:

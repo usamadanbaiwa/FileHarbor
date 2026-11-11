@@ -79,12 +79,15 @@ See [the complete API](docs/api.md).
 | `STORAGE_PATH` | Physical file storage | `./storage` |
 | `FILEHARBOR_STATE_PATH` | Private SQLite and staging directory | `./var` |
 | `MAX_FILE_SIZE_MB` | Maximum file size in MiB | **25** |
+| `MIME_TYPE_EXTENSIONS` | JSON map of additional MIME types to filename extensions | `{}` |
 | `ALLOWED_MIME_TYPES` | Comma-separated allowlist | JPEG, PNG, WebP, PDF, MP4 |
 | `MAX_CONCURRENT_UPLOADS` | Active uploads per process | 4 |
 | `API_RATE_LIMIT` | Request limit per observed source address | 100 |
 | `API_RATE_WINDOW_SECONDS` | Rate-limit window | 60 |
 
 The committed example uses local HTTP settings for testing. Change them for deployment. Restrict the allowlist if your application only needs particular types. MP4 support validates the detected container type and extension; it does not inspect codecs, transcode, or generate thumbnails.
+
+To enable GIF, audio, archives, or custom binary formats, see [file format configuration](docs/formats.md). The allowlist applies to uploads and built-in public downloads.
 
 ## Production deployment
 

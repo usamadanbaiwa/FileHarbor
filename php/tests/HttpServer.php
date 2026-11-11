@@ -50,6 +50,7 @@ final class HttpTestServer
             'PUBLIC_CACHE_MAX_AGE' => (string) $config->cacheMaxAge,
             'MAX_FILE_SIZE_MB' => (string) ($config->maxBytes / 1024 / 1024),
             'ALLOWED_MIME_TYPES' => implode(',', $config->allowed),
+            'MIME_TYPE_EXTENSIONS' => json_encode((object) $config->formats, JSON_THROW_ON_ERROR),
             'API_RATE_LIMIT' => '100',
             'API_RATE_WINDOW_SECONDS' => '60',
         ]);

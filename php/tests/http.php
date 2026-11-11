@@ -5,6 +5,52 @@ declare(strict_types=1);
 require_once __DIR__ . '/HttpServer.php';
 
 return [
+    'HTTP configured formats upload and download with matching rules' => function (): void {
+        withHttpServer(function (HttpTestServer $server): void {
+            $server->setup();
+            $server->login();
+            $account = $server->account();
+            $fixtures = ['gif' => 'image/gif', 'mp3' => 'audio/mpeg', 'wav' => 'audio/wav',
+                'zip' => 'application/zip', 'gz' => 'application/gzip', 'tiff' => 'image/tiff'];
+
+            foreach ($fixtures as $extension => $mime) {
+                $name = 'sample.' . $extension;
+                $file = __DIR__ . '/fixtures/' . $name;
+                $upload = $server->upload($account, $name, $file);
+                expectSame(201, $upload['status']);
+                expectSame($mime, $upload['body']['data']['mime_type']);
+                $response = $server->request('/' . $account['id'] . '/' . $name, ['raw' => true]);
+                expectSame(200, $response['status']);
+                expectSame($mime, $response['headers']['content-type']);
+                expectSame(file_get_contents($file), $response['body']);
+
+                if (in_array($extension, ['zip', 'gz', 'tiff'], true)) {
+                    expectSame('attachment', $response['headers']['content-disposition']);
+                } else {
+                    expectSame(false, isset($response['headers']['content-disposition']));
+                }
+            }
+
+            expectSame(415, $server->upload($account, 'wrong.zip', __DIR__ . '/fixtures/sample.gif')['status']);
+            copy(__DIR__ . '/fixtures/sample.gif', $server->config->storage . '/' . $account['id'] . '/wrong.zip');
+            expectSame(404, $server->request('/' . $account['id'] . '/wrong.zip')['status']);
+        }, [
+            'ALLOWED_MIME_TYPES' => 'image/gif,audio/mpeg,audio/wav,application/zip,application/gzip,image/tiff',
+            'MIME_TYPE_EXTENSIONS' => '{"image/tiff":["tif","tiff"]}',
+        ]);
+    },
+
+    'HTTP additional formats remain disabled by default' => function (): void {
+        withHttpServer(function (HttpTestServer $server): void {
+            $server->setup();
+            $server->login();
+            $account = $server->account();
+            expectSame(415, $server->upload($account, 'sample.gif', __DIR__ . '/fixtures/sample.gif')['status']);
+            copy(__DIR__ . '/fixtures/sample.gif', $server->config->storage . '/' . $account['id'] . '/sample.gif');
+            expectSame(404, $server->request('/' . $account['id'] . '/sample.gif')['status']);
+        });
+    },
+
     'HTTP cache lifetime applies to downloads and ranges only' => function (): void {
         foreach ([0, 120] as $seconds) {
             withHttpServer(function (HttpTestServer $server) use ($seconds): void {

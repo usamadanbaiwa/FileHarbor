@@ -1,8 +1,7 @@
 import { fileTypeFromFile } from 'file-type';
 import { stat } from 'node:fs/promises';
 import { ApiError } from '../http/responses.js';
-
-const publicTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+import { matchesFormat, normalizeMimeType, servesInline } from '../security/formats.js';
 
 export function createContentHandler(storage, config) {
     return async function serveContent(request, response, next) {
@@ -37,8 +36,18 @@ export function createContentHandler(storage, config) {
             throw new ApiError(404, 'FILE_NOT_FOUND', 'File not found.');
         }
 
-        if (!type || !publicTypes.includes(type.mime)) {
+        if (!type) {
             throw new ApiError(404, 'FILE_NOT_FOUND', 'File not found.');
+        }
+
+        type.mime = normalizeMimeType(type.mime);
+
+        if (!matchesFormat(type.mime, source, config)) {
+            throw new ApiError(404, 'FILE_NOT_FOUND', 'File not found.');
+        }
+
+        if (!servesInline(type.mime)) {
+            response.set('Content-Disposition', 'attachment');
         }
 
         response.set({

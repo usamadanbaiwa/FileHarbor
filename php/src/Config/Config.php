@@ -6,6 +6,7 @@ namespace FileHarbor\Config;
 
 use FileHarbor\Http\ApiError;
 use FileHarbor\Support\Paths;
+use FileHarbor\Security\Formats;
 
 final class Config
 {
@@ -21,6 +22,7 @@ final class Config
     public int $rateLimit;
     public int $rateWindow;
     public array $allowed;
+    public array $formats;
 
     public static function load(?array $settings = null): self
     {
@@ -103,24 +105,11 @@ final class Config
         $config->rateLimit = self::integer($settings, 'API_RATE_LIMIT', 100, 100000);
         $config->rateWindow = self::integer($settings, 'API_RATE_WINDOW_SECONDS', 60, 3600);
 
-        $types = self::text(
-            $settings,
-            'ALLOWED_MIME_TYPES',
-            'image/jpeg,image/png,image/webp,application/pdf,video/mp4'
+        $config->formats = Formats::registry(self::text($settings, 'MIME_TYPE_EXTENSIONS', '{}'));
+        $config->allowed = Formats::allowed(
+            self::text($settings, 'ALLOWED_MIME_TYPES', Formats::DEFAULT_TYPES),
+            $config->formats
         );
-
-        $config->allowed = array_map('trim', explode(',', $types));
-        $supported = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
-
-        foreach ($config->allowed as $type) {
-            ApiError::require(
-                in_array($type, $supported, true),
-                'CONFIG_ERROR',
-                'Allowed types are JPEG, PNG, WebP, PDF, and MP4.',
-                500
-            );
-        }
-
 
         return $config;
     }
@@ -173,6 +162,7 @@ final class Config
             'PUBLIC_CACHE_MAX_AGE',
             'MAX_FILE_SIZE_MB',
             'ALLOWED_MIME_TYPES',
+            'MIME_TYPE_EXTENSIONS',
             'API_RATE_LIMIT',
             'API_RATE_WINDOW_SECONDS',
         ];

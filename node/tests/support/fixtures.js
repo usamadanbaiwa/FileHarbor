@@ -19,7 +19,7 @@ const allPermissions = [
     'directories:delete'
 ];
 
-export async function createTestServer(testContext, overrides = {}) {
+export async function createTestServer(testContext, overrides = {}, environment = {}) {
     const baseDirectory = fileURLToPath(new URL('../.state/', import.meta.url));
 
     await mkdir(baseDirectory, {
@@ -33,7 +33,8 @@ export async function createTestServer(testContext, overrides = {}) {
         FILEHARBOR_ENV: 'development',
         FILEHARBOR_SETUP_TOKEN: testSetupToken,
         STORAGE_PATH: path.join(root, 'storage'),
-        FILEHARBOR_STATE_PATH: path.join(root, 'state')
+        FILEHARBOR_STATE_PATH: path.join(root, 'state'),
+        ...environment
     });
 
     Object.assign(config, overrides);

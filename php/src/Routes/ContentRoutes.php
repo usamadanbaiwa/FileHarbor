@@ -8,17 +8,19 @@ use FileHarbor\Http\ApiError;
 use FileHarbor\Http\Request;
 use FileHarbor\Http\Response;
 use FileHarbor\Storage\Storage;
+use FileHarbor\Config\Config;
+use FileHarbor\Security\Formats;
 use finfo;
 
 final class ContentRoutes
 {
     private Storage $storage;
-    private int $cacheMaxAge;
+    private Config $config;
 
-    public function __construct(Storage $storage, int $cacheMaxAge)
+    public function __construct(Storage $storage, Config $config)
     {
         $this->storage = $storage;
-        $this->cacheMaxAge = $cacheMaxAge;
+        $this->config = $config;
     }
 
     public function handle(Request $request): bool
@@ -43,9 +45,10 @@ final class ContentRoutes
             $details = fstat($file);
             $sample = fread($file, 8192);
             $type = (new finfo(FILEINFO_MIME_TYPE))->buffer($sample);
-            $types = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+            ApiError::require(is_string($type), 'FILE_NOT_FOUND', 'File not found.', 404);
+            $type = Formats::normalize($type);
 
-            ApiError::require(in_array($type, $types, true), 'FILE_NOT_FOUND', 'File not found.', 404);
+            ApiError::require(Formats::matches($type, $matches[2], $this->config), 'FILE_NOT_FOUND', 'File not found.', 404);
 
             $size = $details['size'];
             $modified = gmdate('D, d M Y H:i:s', $details['mtime']) . ' GMT';
@@ -54,7 +57,11 @@ final class ContentRoutes
             Response::headers();
             header('Content-Type: ' . $type);
             header("Content-Security-Policy: sandbox; default-src 'none'; frame-ancestors 'none'");
-            header('Cache-Control: public, max-age=' . $this->cacheMaxAge . ', must-revalidate');
+            header('Cache-Control: public, max-age=' . $this->config->cacheMaxAge . ', must-revalidate');
+
+            if (!Formats::servesInline($type)) {
+                header('Content-Disposition: attachment');
+            }
             header('Accept-Ranges: bytes');
             header('ETag: ' . $etag);
             header('Last-Modified: ' . $modified);
