@@ -92,7 +92,7 @@ export async function createApp(config) {
     app.use('/fileharbor/:accountId/api', fileRouter);
 
     if (config.serveFiles) {
-        app.use(createContentHandler(storage));
+        app.use(createContentHandler(storage, config));
     }
 
     app.use(function handleMissingRoute(request, response, next) {

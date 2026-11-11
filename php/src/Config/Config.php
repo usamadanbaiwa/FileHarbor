@@ -6,6 +6,7 @@ namespace FileHarbor\Config;
 
 use FileHarbor\Http\ApiError;
 use FileHarbor\Support\Paths;
+use FileHarbor\Security\Formats;
 
 final class Config
 {
@@ -17,9 +18,11 @@ final class Config
     public bool $production;
     public bool $serveFiles;
     public int $maxBytes;
+    public int $cacheMaxAge;
     public int $rateLimit;
     public int $rateWindow;
     public array $allowed;
+    public array $formats;
 
     public static function load(?array $settings = null): self
     {
@@ -98,27 +101,15 @@ final class Config
         );
 
         $config->maxBytes = self::integer($settings, 'MAX_FILE_SIZE_MB', 25, 1024) * 1024 * 1024;
+        $config->cacheMaxAge = self::integer($settings, 'PUBLIC_CACHE_MAX_AGE', 86400, 31536000, 0);
         $config->rateLimit = self::integer($settings, 'API_RATE_LIMIT', 100, 100000);
         $config->rateWindow = self::integer($settings, 'API_RATE_WINDOW_SECONDS', 60, 3600);
 
-        $types = self::text(
-            $settings,
-            'ALLOWED_MIME_TYPES',
-            'image/jpeg,image/png,image/webp,application/pdf,video/mp4'
+        $config->formats = Formats::registry(self::text($settings, 'MIME_TYPE_EXTENSIONS', '{}'));
+        $config->allowed = Formats::allowed(
+            self::text($settings, 'ALLOWED_MIME_TYPES', Formats::DEFAULT_TYPES),
+            $config->formats
         );
-
-        $config->allowed = array_map('trim', explode(',', $types));
-        $supported = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
-
-        foreach ($config->allowed as $type) {
-            ApiError::require(
-                in_array($type, $supported, true),
-                'CONFIG_ERROR',
-                'Allowed types are JPEG, PNG, WebP, PDF, and MP4.',
-                500
-            );
-        }
-
 
         return $config;
     }
@@ -168,8 +159,10 @@ final class Config
             'STORAGE_PATH',
             'FILEHARBOR_STATE_PATH',
             'SERVE_FILES',
+            'PUBLIC_CACHE_MAX_AGE',
             'MAX_FILE_SIZE_MB',
             'ALLOWED_MIME_TYPES',
+            'MIME_TYPE_EXTENSIONS',
             'API_RATE_LIMIT',
             'API_RATE_WINDOW_SECONDS',
         ];
@@ -196,7 +189,7 @@ final class Config
         return $settings[$name];
     }
 
-    private static function integer(array $settings, string $name, int $default, int $maximum): int
+    private static function integer(array $settings, string $name, int $default, int $maximum, int $minimum = 1): int
     {
         $value = $default;
 
@@ -215,7 +208,7 @@ final class Config
         }
 
         ApiError::require(
-            $value > 0 && $value <= $maximum,
+            $value >= $minimum && $value <= $maximum,
             'CONFIG_ERROR',
             'Invalid ' . $name . '.',
             500

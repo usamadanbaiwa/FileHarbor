@@ -1,16 +1,9 @@
 import path from 'node:path';
 import { validateDataDirectories } from '../utils/paths.js';
 import { requireValue } from '../http/responses.js';
+import { readFormats, readAllowedTypes } from '../security/formats.js';
 
-const supportedMimeTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-    'application/pdf',
-    'video/mp4'
-];
-
-function readInteger(environment, name, defaultValue, maximum) {
+function readInteger(environment, name, defaultValue, maximum, minimum = 1) {
     let setting = defaultValue;
 
     if (environment[name] !== undefined && environment[name] !== null) {
@@ -18,7 +11,12 @@ function readInteger(environment, name, defaultValue, maximum) {
     }
 
     const value = Number(setting);
-    const valid = Number.isSafeInteger(value) && value > 0 && value <= maximum;
+    const valid =
+        (typeof setting === 'number' ||
+            (typeof setting === 'string' && /^[0-9]+$/.test(setting))) &&
+        Number.isSafeInteger(value) &&
+        value >= minimum &&
+        value <= maximum;
 
     requireValue(valid, 'CONFIG_ERROR', 'Invalid ' + name + '.');
 
@@ -47,25 +45,6 @@ function validateOrigin(origin, production) {
         'CONFIG_ERROR',
         'Production requires an HTTPS FILEHARBOR_URL.'
     );
-}
-
-function readMimeTypes(environment) {
-    const configuredTypes = environment.ALLOWED_MIME_TYPES || supportedMimeTypes.join(',');
-    const allowedTypes = configuredTypes.split(',').map(function trimType(value) {
-        return value.trim();
-    });
-
-    const supported = allowedTypes.every(function isSupported(type) {
-        return supportedMimeTypes.includes(type);
-    });
-
-    requireValue(
-        allowedTypes.length > 0 && supported,
-        'CONFIG_ERROR',
-        'Allowed types are JPEG, PNG, WebP, PDF, and MP4.'
-    );
-
-    return allowedTypes;
 }
 
 export function loadConfig(environment = process.env) {
@@ -100,13 +79,17 @@ export function loadConfig(environment = process.env) {
         'Set FILEHARBOR_SETUP_TOKEN to a random secret of at least 32 characters.'
     );
 
+    const formats = readFormats(environment.MIME_TYPE_EXTENSIONS);
+
     return {
+        formats: formats,
         storage: storage,
+        cacheMaxAge: readInteger(environment, 'PUBLIC_CACHE_MAX_AGE', 86400, 31536000, 0),
         serveFiles: serveFiles,
         state: state,
         production: production,
         origin: origin,
-        allowed: readMimeTypes(environment),
+        allowed: readAllowedTypes(environment.ALLOWED_MIME_TYPES, formats),
         setupToken: setupToken,
         port: readInteger(environment, 'PORT', 7241, 65535),
         host: environment.HOST || '127.0.0.1',

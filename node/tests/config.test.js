@@ -5,6 +5,26 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig } from '../src/config/environment.js';
 import { testSetupToken } from './support/fixtures.js';
 
+test('public cache lifetime defaults to one day and accepts zero', function cacheLifetime() {
+    const settings = {
+        FILEHARBOR_ENV: 'development',
+        FILEHARBOR_SETUP_TOKEN: testSetupToken
+    };
+
+    assert.equal(loadConfig(settings).cacheMaxAge, 86400);
+    assert.equal(loadConfig({ ...settings, PUBLIC_CACHE_MAX_AGE: '0' }).cacheMaxAge, 0);
+    assert.equal(
+        loadConfig({ ...settings, PUBLIC_CACHE_MAX_AGE: '31536000' }).cacheMaxAge,
+        31536000
+    );
+
+    for (const value of ['-1', '1.5', '31536001', '', false]) {
+        assert.throws(function invalidCacheLifetime() {
+            loadConfig({ ...settings, PUBLIC_CACHE_MAX_AGE: value });
+        }, /PUBLIC_CACHE_MAX_AGE/);
+    }
+});
+
 test('public file serving defaults on and requires an explicit boolean setting', function fileServingSetting() {
     const settings = {
         FILEHARBOR_ENV: 'development',

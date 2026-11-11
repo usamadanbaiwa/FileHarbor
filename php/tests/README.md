@@ -22,3 +22,5 @@ Optional shortcuts are `composer test` and `composer lint`. Unit tests use tempo
 The small MP4 fixture contains a container header for signature checks and is not a playable clip. Tests pad it on disk to check the exact file-size boundary. Upload validation does not decode codecs.
 
 `tools/lint.php` checks PHP syntax and code style.
+
+Format tests cover GIF, MP3, WAV, ZIP, GZIP, custom TIFF mapping, default rejection, MIME aliases, unsafe mappings, and mismatched extensions.

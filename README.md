@@ -35,7 +35,7 @@ Managed storage services such as S3 and R2 offer useful capabilities. FileHarbor
 | **Upload from any backend** | Multipart HTTP uploads with Bearer API keys. No SDK required. |
 | **A small admin panel** | Create accounts, assign permissions, and rotate or revoke keys. |
 | **Separate application accounts** | Each account has its own storage directory and scoped access. |
-| **Images, documents, and video** | JPEG, PNG, WebP, PDF, and MP4. Configurable **25 MiB** default limit. |
+| **Images, documents, and video** | JPEG, PNG, WebP, PDF, and MP4 by default. Enable GIF, audio, archives, or custom formats. **25 MiB** default limit. |
 | **Ordinary files** | Create folders, list with pagination, and delete by relative path. |
 | **Your own metadata** | Your application stores file records. SQLite holds authentication state. |
 | **Public file URLs** | Built-in streaming by default. Optional direct Apache/Nginx delivery. |
@@ -140,6 +140,8 @@ Store the returned source and account ID in your application. The file is public
 https://files.example.com/ACCOUNT_ID/assets/profile.png
 ```
 
+Public files have a one-day browser cache lifetime by default. Change `PUBLIC_CACHE_MAX_AGE` (seconds), or set it to `0` to require revalidation. Use a new filename when replacing a file; old cached copies can remain visible until their lifetime expires.
+
 Built-in serving is enabled by default (`SERVE_FILES=true`). Set `SERVE_FILES=false` to use an Apache/Nginx static mapping instead; see your installation guide.
 
 When moving servers, copy your files with the same directory structure and change the public base URL in your application.
@@ -162,6 +164,12 @@ See [client integration examples](docs/clients.md), or the `examples/` folder in
 Only the application's public folder belongs in its web root: `public/` by default, or the renamed folder configured for PHP. Keep credentials, SQLite, temporary uploads, and source code private. Use HTTPS and back up both files and authentication state.
 
 File type inspection is not malware scanning or video transcoding. Public files are public: rotating a key does not revoke an existing public URL.
+
+## File formats
+
+Enable additional formats with `ALLOWED_MIME_TYPES`. GIF, MP3, WAV, ZIP, and GZIP have built-in extension mappings. Use `MIME_TYPE_EXTENSIONS` for other detectable binary formats. Uploads and built-in downloads share the same validation rules.
+
+See [PHP format configuration](php/docs/formats.md) or [Node.js format configuration](node/docs/formats.md) for examples and restrictions.
 
 ## API reference
 

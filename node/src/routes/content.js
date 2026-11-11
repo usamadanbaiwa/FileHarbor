@@ -1,10 +1,9 @@
 import { fileTypeFromFile } from 'file-type';
 import { stat } from 'node:fs/promises';
 import { ApiError } from '../http/responses.js';
+import { matchesFormat, normalizeMimeType, servesInline } from '../security/formats.js';
 
-const publicTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
-
-export function createContentHandler(storage) {
+export function createContentHandler(storage, config) {
     return async function serveContent(request, response, next) {
         const match = /^\/([A-Za-z0-9_-]{22})\/(.+)$/.exec(request.path);
 
@@ -37,14 +36,24 @@ export function createContentHandler(storage) {
             throw new ApiError(404, 'FILE_NOT_FOUND', 'File not found.');
         }
 
-        if (!type || !publicTypes.includes(type.mime)) {
+        if (!type) {
             throw new ApiError(404, 'FILE_NOT_FOUND', 'File not found.');
+        }
+
+        type.mime = normalizeMimeType(type.mime);
+
+        if (!matchesFormat(type.mime, source, config)) {
+            throw new ApiError(404, 'FILE_NOT_FOUND', 'File not found.');
+        }
+
+        if (!servesInline(type.mime)) {
+            response.set('Content-Disposition', 'attachment');
         }
 
         response.set({
             'Content-Type': type.mime,
             'Content-Security-Policy': "sandbox; default-src 'none'; frame-ancestors 'none'",
-            'Cache-Control': 'public, max-age=0, must-revalidate'
+            'Cache-Control': 'public, max-age=' + config.cacheMaxAge + ', must-revalidate'
         });
 
         response.sendFile(

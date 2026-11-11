@@ -8,19 +8,12 @@ use FileHarbor\Config\Config;
 use FileHarbor\Http\ApiError;
 use FileHarbor\Http\Request;
 use FileHarbor\Security\Credentials;
+use FileHarbor\Security\Formats;
 
 use finfo;
 
 final class Upload
 {
-    private const EXTENSIONS = [
-        'image/jpeg' => ['jpg', 'jpeg'],
-        'image/png' => ['png'],
-        'image/webp' => ['webp'],
-        'application/pdf' => ['pdf'],
-        'video/mp4' => ['mp4'],
-    ];
-
     public static function store(
         Request $request,
         Config $config,
@@ -108,11 +101,11 @@ final class Upload
 
         $inspector = new finfo(FILEINFO_MIME_TYPE);
         $mime = $inspector->file($file['tmp_name']);
-        $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
         $supported = false;
 
-        if (is_string($mime) && in_array($mime, $config->allowed, true)) {
-            $supported = in_array($extension, self::EXTENSIONS[$mime], true);
+        if (is_string($mime)) {
+            $mime = Formats::normalize($mime);
+            $supported = Formats::matches($mime, $name, $config);
         }
 
         ApiError::require(

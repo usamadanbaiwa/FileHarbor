@@ -86,13 +86,17 @@ Environment variables override values in `config/config.php`. Relative filesyste
 | `FILEHARBOR_ENV` | Use `production` for deployment | `production` |
 | `FILEHARBOR_URL` | Exact HTTPS origin for the panel | Local example uses port 8080 |
 | `FILEHARBOR_SETUP_TOKEN` | Random first-install secret | None |
+| `PUBLIC_CACHE_MAX_AGE` | Public file cache lifetime in seconds (0–31536000) | `86400` (one day) |
 | `SERVE_FILES` | Built-in public file serving; set `false` for external serving | `true` |
 | `STORAGE_PATH` | Physical file storage | Application `storage/` |
 | `FILEHARBOR_STATE_PATH` | Private SQLite/staging directory | Application `var/` |
 | `MAX_FILE_SIZE_MB` | Maximum file size in MiB | **25** |
+| `MIME_TYPE_EXTENSIONS` | JSON map of additional MIME types to filename extensions | `{}` |
 | `ALLOWED_MIME_TYPES` | Allowed content types | JPEG, PNG, WebP, PDF, MP4 |
 | `API_RATE_LIMIT` | Rate limit per observed source address | 100 |
 | `API_RATE_WINDOW_SECONDS` | Rate-limit window | 60 |
+
+To enable GIF, audio, archives, or custom binary formats, see [file format configuration](docs/formats.md). The allowlist applies to uploads and built-in public downloads.
 
 MP4 support checks the detected container type and extension; it does not decode video, inspect codecs, or transcode it.
 
@@ -166,7 +170,7 @@ https://files.example.com/ACCOUNT_ID/assets/photo.png
 
 FileHarbor streams `STORAGE_PATH/ACCOUNT_ID/assets/photo.png`. No separate storage mapping is needed. The account ID is part of the URL, not a password. Viewing files requires no API key, and disabling or removing an API account does not make its existing files private.
 
-Public responses support `GET`, `HEAD`, single byte ranges for video seeking, and conditional requests using ETag or Last-Modified. Caches must revalidate before reuse. Directory listings are not exposed through public URLs; use the authenticated listing API. Each download uses a PHP worker while streaming; configure hosting-level request limits or use direct web-server serving for heavier download traffic.
+Public responses support `GET`, `HEAD`, single byte ranges for video seeking, and conditional requests using ETag or Last-Modified. By default, browsers may reuse public files for one day without contacting the server. Set `PUBLIC_CACHE_MAX_AGE=0` to revalidate on every reuse, or choose another lifetime in seconds (up to 31536000). Once stale, cached files must be revalidated. Use a new filename when replacing content; deleted or replaced files can remain visible from cache until the lifetime expires. Directory listings are not exposed through public URLs; use the authenticated listing API. Each download uses a PHP worker while streaming; configure hosting-level request limits or use direct web-server serving for heavier download traffic.
 
 To serve files directly through Apache or Nginx, set `SERVE_FILES=false` and configure a static mapping to `STORAGE_PATH`. For example, mapping `/content/` produces `https://files.example.com/content/ACCOUNT_ID/assets/photo.png`. Update your application's public base URL to match. Disabling built-in serving alone does not configure a web-server mapping.
 

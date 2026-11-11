@@ -61,7 +61,7 @@ final class App
         $this->fileRoutes = new FileRoutes($config, $registry, $storage, $rateLimit);
 
         if ($config->serveFiles) {
-            $this->contentRoutes = new ContentRoutes($storage);
+            $this->contentRoutes = new ContentRoutes($storage, $config);
         }
     }
 
