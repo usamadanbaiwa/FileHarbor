@@ -13,10 +13,12 @@ use finfo;
 final class ContentRoutes
 {
     private Storage $storage;
+    private int $cacheMaxAge;
 
-    public function __construct(Storage $storage)
+    public function __construct(Storage $storage, int $cacheMaxAge)
     {
         $this->storage = $storage;
+        $this->cacheMaxAge = $cacheMaxAge;
     }
 
     public function handle(Request $request): bool
@@ -52,7 +54,7 @@ final class ContentRoutes
             Response::headers();
             header('Content-Type: ' . $type);
             header("Content-Security-Policy: sandbox; default-src 'none'; frame-ancestors 'none'");
-            header('Cache-Control: public, max-age=0, must-revalidate');
+            header('Cache-Control: public, max-age=' . $this->cacheMaxAge . ', must-revalidate');
             header('Accept-Ranges: bytes');
             header('ETag: ' . $etag);
             header('Last-Modified: ' . $modified);

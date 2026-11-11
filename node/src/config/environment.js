@@ -10,7 +10,7 @@ const supportedMimeTypes = [
     'video/mp4'
 ];
 
-function readInteger(environment, name, defaultValue, maximum) {
+function readInteger(environment, name, defaultValue, maximum, minimum = 1) {
     let setting = defaultValue;
 
     if (environment[name] !== undefined && environment[name] !== null) {
@@ -18,7 +18,12 @@ function readInteger(environment, name, defaultValue, maximum) {
     }
 
     const value = Number(setting);
-    const valid = Number.isSafeInteger(value) && value > 0 && value <= maximum;
+    const valid =
+        (typeof setting === 'number' ||
+            (typeof setting === 'string' && /^[0-9]+$/.test(setting))) &&
+        Number.isSafeInteger(value) &&
+        value >= minimum &&
+        value <= maximum;
 
     requireValue(valid, 'CONFIG_ERROR', 'Invalid ' + name + '.');
 
@@ -102,6 +107,7 @@ export function loadConfig(environment = process.env) {
 
     return {
         storage: storage,
+        cacheMaxAge: readInteger(environment, 'PUBLIC_CACHE_MAX_AGE', 86400, 31536000, 0),
         serveFiles: serveFiles,
         state: state,
         production: production,

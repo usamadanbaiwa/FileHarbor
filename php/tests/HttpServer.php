@@ -47,6 +47,7 @@ final class HttpTestServer
             'FILEHARBOR_STATE_PATH' => $config->state,
             'STORAGE_PATH' => $config->storage,
             'SERVE_FILES' => 'false',
+            'PUBLIC_CACHE_MAX_AGE' => (string) $config->cacheMaxAge,
             'MAX_FILE_SIZE_MB' => (string) ($config->maxBytes / 1024 / 1024),
             'ALLOWED_MIME_TYPES' => implode(',', $config->allowed),
             'API_RATE_LIMIT' => '100',

@@ -4,7 +4,7 @@ import { ApiError } from '../http/responses.js';
 
 const publicTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
 
-export function createContentHandler(storage) {
+export function createContentHandler(storage, config) {
     return async function serveContent(request, response, next) {
         const match = /^\/([A-Za-z0-9_-]{22})\/(.+)$/.exec(request.path);
 
@@ -44,7 +44,7 @@ export function createContentHandler(storage) {
         response.set({
             'Content-Type': type.mime,
             'Content-Security-Policy': "sandbox; default-src 'none'; frame-ancestors 'none'",
-            'Cache-Control': 'public, max-age=0, must-revalidate'
+            'Cache-Control': 'public, max-age=' + config.cacheMaxAge + ', must-revalidate'
         });
 
         response.sendFile(

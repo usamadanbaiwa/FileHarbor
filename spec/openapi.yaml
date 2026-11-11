@@ -27,7 +27,7 @@ paths:
     get:
       operationId: getPublicFile
       security: []
-      description: Public file bytes. Enabled by default; SERVE_FILES=false disables this route. Supports a single byte range and conditional requests. Account revocation does not revoke public access.
+      description: Public file bytes. Enabled by default; SERVE_FILES=false disables this route. Supports a single byte range and conditional requests. PUBLIC_CACHE_MAX_AGE controls public cache freshness in seconds, defaulting to 86400; 0 requires revalidation. Account revocation does not revoke public access.
       parameters:
         - name: Range
           in: header

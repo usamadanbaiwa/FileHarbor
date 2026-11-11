@@ -5,6 +5,25 @@ declare(strict_types=1);
 require_once __DIR__ . '/HttpServer.php';
 
 return [
+    'HTTP cache lifetime applies to downloads and ranges only' => function (): void {
+        foreach ([0, 120] as $seconds) {
+            withHttpServer(function (HttpTestServer $server) use ($seconds): void {
+                $id = str_repeat('a', 22);
+                mkdir($server->config->storage . '/' . $id);
+                copy(__DIR__ . '/fixtures/image.png', $server->config->storage . '/' . $id . '/image.png');
+
+                $response = $server->request('/' . $id . '/image.png', [
+                    'raw' => true,
+                    'headers' => ['Range' => 'bytes=0-7'],
+                ]);
+
+                expectSame(206, $response['status']);
+                expectSame('public, max-age=' . $seconds . ', must-revalidate', $response['headers']['cache-control']);
+                expectSame('no-store', $server->request('/api/health')['headers']['cache-control']);
+            }, ['PUBLIC_CACHE_MAX_AGE' => $seconds]);
+        }
+    },
+
     'HTTP works with a renamed public_html document root' => function (): void {
         withHttpServer(function (HttpTestServer $server): void {
             expectSame(200, $server->request('/panel/', ['raw' => true])['status']);
@@ -44,6 +63,7 @@ return [
             expectSame(200, $response['status']);
             expectSame(file_get_contents($image), $response['body']);
             expectSame('image/png', $response['headers']['content-type']);
+            expectSame('public, max-age=86400, must-revalidate', $response['headers']['cache-control']);
             expectSame('nosniff', $response['headers']['x-content-type-options']);
 
             $head = $server->request($url, ['method' => 'HEAD', 'raw' => true]);
@@ -58,6 +78,7 @@ return [
             ]);
 
             expectSame(304, $cached['status']);
+            expectSame('public, max-age=86400, must-revalidate', $cached['headers']['cache-control']);
             expectSame('', $cached['body']);
 
             $gzipTag = substr($response['headers']['etag'], 0, -1) . '-gzip"';

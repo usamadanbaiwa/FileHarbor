@@ -6,6 +6,23 @@ use FileHarbor\Config\Config;
 use FileHarbor\Http\Request;
 
 return [
+    'public cache lifetime defaults to one day and accepts zero' => function (): void {
+        $settings = [
+            'FILEHARBOR_ENV' => 'development',
+            'FILEHARBOR_SETUP_TOKEN' => str_repeat('a', 32),
+        ];
+
+        expectSame(86400, Config::load($settings)->cacheMaxAge);
+        expectSame(0, Config::load(array_merge($settings, ['PUBLIC_CACHE_MAX_AGE' => '0']))->cacheMaxAge);
+        expectSame(31536000, Config::load(array_merge($settings, ['PUBLIC_CACHE_MAX_AGE' => '31536000']))->cacheMaxAge);
+
+        foreach (['-1', '1.5', '31536001', '', false] as $value) {
+            expectError('CONFIG_ERROR', function () use ($settings, $value): void {
+                Config::load(array_merge($settings, ['PUBLIC_CACHE_MAX_AGE' => $value]));
+            });
+        }
+    },
+
     'document root defaults to public and supports public_html' => function (): void {
         $settings = [
             'FILEHARBOR_ENV' => 'development',

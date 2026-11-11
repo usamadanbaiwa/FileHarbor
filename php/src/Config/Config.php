@@ -17,6 +17,7 @@ final class Config
     public bool $production;
     public bool $serveFiles;
     public int $maxBytes;
+    public int $cacheMaxAge;
     public int $rateLimit;
     public int $rateWindow;
     public array $allowed;
@@ -98,6 +99,7 @@ final class Config
         );
 
         $config->maxBytes = self::integer($settings, 'MAX_FILE_SIZE_MB', 25, 1024) * 1024 * 1024;
+        $config->cacheMaxAge = self::integer($settings, 'PUBLIC_CACHE_MAX_AGE', 86400, 31536000, 0);
         $config->rateLimit = self::integer($settings, 'API_RATE_LIMIT', 100, 100000);
         $config->rateWindow = self::integer($settings, 'API_RATE_WINDOW_SECONDS', 60, 3600);
 
@@ -168,6 +170,7 @@ final class Config
             'STORAGE_PATH',
             'FILEHARBOR_STATE_PATH',
             'SERVE_FILES',
+            'PUBLIC_CACHE_MAX_AGE',
             'MAX_FILE_SIZE_MB',
             'ALLOWED_MIME_TYPES',
             'API_RATE_LIMIT',
@@ -196,7 +199,7 @@ final class Config
         return $settings[$name];
     }
 
-    private static function integer(array $settings, string $name, int $default, int $maximum): int
+    private static function integer(array $settings, string $name, int $default, int $maximum, int $minimum = 1): int
     {
         $value = $default;
 
@@ -215,7 +218,7 @@ final class Config
         }
 
         ApiError::require(
-            $value > 0 && $value <= $maximum,
+            $value >= $minimum && $value <= $maximum,
             'CONFIG_ERROR',
             'Invalid ' . $name . '.',
             500

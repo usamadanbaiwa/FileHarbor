@@ -26,6 +26,7 @@ test('public files support GET, HEAD, conditional requests, and video ranges', a
     const response = await fetch(url);
 
     assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=86400, must-revalidate');
     assert.equal(response.headers.get('content-type'), 'image/png');
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
     assert.match(response.headers.get('content-security-policy'), /sandbox/);
@@ -42,6 +43,7 @@ test('public files support GET, HEAD, conditional requests, and video ranges', a
     });
 
     assert.equal(cached.status, 304);
+    assert.equal(cached.headers.get('cache-control'), 'public, max-age=86400, must-revalidate');
 
     const video = Buffer.from(
         '000000186674797069736f6d0000020069736f6d6d703432000000086d646174',
@@ -149,4 +151,28 @@ test('public serving rejects symlink files and directories', async function link
     const linkedFile = await fetch(server.config.origin + '/' + id + '/image.png');
 
     assert.equal(linkedFile.status, 400);
+});
+
+test('public cache lifetime is applied to downloads and range responses', async function cacheSettings(testContext) {
+    for (const seconds of [0, 120]) {
+        const server = await createTestServer(testContext, { cacheMaxAge: seconds });
+        const id = 'a'.repeat(22);
+
+        await mkdir(path.join(server.config.storage, id));
+        await writeFile(path.join(server.config.storage, id, 'image.png'), testImage);
+
+        const url = server.config.origin + '/' + id + '/image.png';
+        const response = await fetch(url, { headers: { Range: 'bytes=0-7' } });
+
+        assert.equal(response.status, 206);
+        assert.equal(
+            response.headers.get('cache-control'),
+            'public, max-age=' + seconds + ', must-revalidate'
+        );
+        await response.arrayBuffer();
+        assert.equal(
+            (await fetch(server.config.origin + '/api/health')).headers.get('cache-control'),
+            'no-store'
+        );
+    }
 });

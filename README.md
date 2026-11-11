@@ -140,6 +140,8 @@ Store the returned source and account ID in your application. The file is public
 https://files.example.com/ACCOUNT_ID/assets/profile.png
 ```
 
+Public files have a one-day browser cache lifetime by default. Change `PUBLIC_CACHE_MAX_AGE` (seconds), or set it to `0` to require revalidation. Use a new filename when replacing a file; old cached copies can remain visible until their lifetime expires.
+
 Built-in serving is enabled by default (`SERVE_FILES=true`). Set `SERVE_FILES=false` to use an Apache/Nginx static mapping instead; see your installation guide.
 
 When moving servers, copy your files with the same directory structure and change the public base URL in your application.

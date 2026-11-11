@@ -74,6 +74,7 @@ See [the complete API](docs/api.md).
 | `FILEHARBOR_URL` | Exact panel origin; HTTPS in production | Local example uses port 7241 |
 | `FILEHARBOR_SETUP_TOKEN` | Random first-install secret, at least 32 characters | None |
 | `HOST`, `PORT` | Listener address | `127.0.0.1`, `7241` |
+| `PUBLIC_CACHE_MAX_AGE` | Public file cache lifetime in seconds (0–31536000) | `86400` (one day) |
 | `SERVE_FILES` | Built-in public file serving; set `false` for external serving | `true` |
 | `STORAGE_PATH` | Physical file storage | `./storage` |
 | `FILEHARBOR_STATE_PATH` | Private SQLite and staging directory | `./var` |
@@ -104,7 +105,7 @@ https://files.example.com/ACCOUNT_ID/assets/photo.png
 
 FileHarbor streams `STORAGE_PATH/ACCOUNT_ID/assets/photo.png`. No separate storage mapping is needed. The account ID is part of the URL, not a password. Viewing files requires no API key, and disabling or removing an API account does not make its existing files private.
 
-Public responses support `GET`, `HEAD`, single byte ranges for video seeking, and conditional requests using ETag or Last-Modified. Caches must revalidate before reuse. Directory listings are not exposed through public URLs; use the authenticated listing API. Public file requests count toward this process's request rate limit.
+Public responses support `GET`, `HEAD`, single byte ranges for video seeking, and conditional requests using ETag or Last-Modified. By default, browsers may reuse public files for one day without contacting the server. Set `PUBLIC_CACHE_MAX_AGE=0` to revalidate on every reuse, or choose another lifetime in seconds (up to 31536000). Once stale, cached files must be revalidated. Use a new filename when replacing content; deleted or replaced files can remain visible from cache until the lifetime expires. Directory listings are not exposed through public URLs; use the authenticated listing API. Public file requests count toward this process's request rate limit.
 
 To serve files directly through Apache or Nginx, set `SERVE_FILES=false` and configure a static mapping to `STORAGE_PATH`. For example, mapping `/content/` produces `https://files.example.com/content/ACCOUNT_ID/assets/photo.png`. Update your application's public base URL to match. Disabling built-in serving alone does not configure a web-server mapping.
 
